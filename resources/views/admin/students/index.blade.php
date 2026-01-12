@@ -8,49 +8,34 @@
     <div class="py-12" x-data="studentPage()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <x-card>
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                     <h3 class="text-lg font-medium text-gray-900">Daftar Siswa</h3>
-                    <button @click="openModal('create')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        + Tambah Siswa
-                    </button>
+                    
+                    <div class="flex items-center gap-4 w-full sm:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <x-text-input 
+                                type="text" 
+                                x-model="searchQuery"
+                                @input.debounce.500ms="performSearch"
+                                placeholder="Cari Nama, NIS, Kelas..." 
+                                class="w-full"
+                            />
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <svg x-show="loadingSearch" class="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <button @click="openModal('create')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 whitespace-nowrap">
+                            + Tambah Siswa
+                        </button>
+                    </div>
                 </div>
 
-                <x-table :headers="['Nama Lengkap', 'NIS / NISN', 'Kelas', 'Status', 'Aksi']">
-                    @forelse($students as $student)
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $student->full_name }}</div>
-                                <div class="text-sm text-gray-500">{{ $student->gender == 'male' ? 'Laki-laki' : 'Perempuan' }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $student->nis }}</div>
-                                <div class="text-sm text-gray-500">{{ $student->nisn }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $student->classRoom?->name ?? 'Belum ada kelas' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <x-badge :color="$student->status === 'active' ? 'green' : 'gray'">
-                                    {{ $student->status === 'active' ? 'Aktif' : 'Nonaktif' }}
-                                </x-badge>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button @click="openDetail({{ $student }})" class="text-indigo-600 hover:text-indigo-900 mr-3">Detail</button>
-                                <button @click="openModal('edit', {{ $student }})" class="text-amber-600 hover:text-amber-900 mr-3">Edit</button>
-                                <button @click="deleteStudent({{ $student->id }})" class="text-red-600 hover:text-red-900">Hapus</button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                Belum ada data siswa.
-                            </td>
-                        </tr>
-                    @endforelse
-                </x-table>
-
-                <div class="mt-4">
-                    {{ $students->links() }}
+                <div id="student-list">
+                    @include('admin.students.partials.table')
                 </div>
             </x-card>
         </div>
@@ -58,6 +43,7 @@
         <!-- Student Form Modal (Create/Edit) -->
         <x-modal name="student-modal" focusable>
             <form @submit.prevent="saveStudent" class="p-6">
+                <!-- ... Form Content ... -->
                 <h2 class="text-lg font-bold text-gray-900 mb-4" x-text="isEdit ? 'Edit Data Siswa' : 'Tambah Siswa Baru'"></h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -128,7 +114,8 @@
 
         <!-- Detail Modal -->
         <x-modal name="detail-student-modal" focusable>
-            <div class="p-6" x-data="{ student: null }" @open-detail.window="student = $event.detail">
+            <!-- ... Detail Content ... -->
+             <div class="p-6" x-data="{ student: null }" @open-detail.window="student = $event.detail">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Detail Siswa</h2>
                 <template x-if="student">
                     <div class="space-y-3">
@@ -151,7 +138,7 @@
                                 <span class="block text-xs text-gray-500 uppercase tracking-wider">Jenis Kelamin</span>
                                 <span class="block text-sm font-medium text-gray-900" x-text="student.gender == 'male' ? 'Laki-laki' : 'Perempuan'"></span>
                             </div>
-                             <div>
+                              <div>
                                 <span class="block text-xs text-gray-500 uppercase tracking-wider">Tanggal Lahir</span>
                                 <span class="block text-sm font-medium text-gray-900" x-text="student.birth_date || '-'"></span>
                             </div>
@@ -181,6 +168,8 @@
             return {
                 isEdit: false,
                 currentId: null,
+                searchQuery: '{{ request('search') }}',
+                loadingSearch: false,
                 form: {
                     full_name: '',
                     nis: '',
@@ -192,6 +181,33 @@
                 },
                 errors: {},
                 loading: false,
+
+                async performSearch() {
+                    this.loadingSearch = true;
+                    try {
+                        const res = await fetch('{{ route('admin.students.index') }}?search=' + encodeURIComponent(this.searchQuery), {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        const html = await res.text();
+                        document.getElementById('student-list').innerHTML = html;
+                        
+                        // Update URL without reload
+                        const newUrl = new URL(window.location);
+                        if (this.searchQuery) {
+                            newUrl.searchParams.set('search', this.searchQuery);
+                        } else {
+                            newUrl.searchParams.delete('search');
+                        }
+                        window.history.pushState({}, '', newUrl);
+
+                    } catch (e) {
+                        console.error('Search failed', e);
+                    } finally {
+                        this.loadingSearch = false;
+                    }
+                },
 
                 openModal(type, data = null) {
                     this.isEdit = type === 'edit';
@@ -261,7 +277,17 @@
                         }
 
                         alert(this.isEdit ? 'Data berhasil diperbarui' : 'Siswa berhasil ditambahkan');
-                        window.location.reload();
+                        
+                        // Smart reload: just refresh the table instead of full page
+                        this.performSearch(); 
+                        this.openModal('close'); // Actually close modal logic is via dispatch usually
+                        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'student-modal' })); 
+                        this.$dispatch('close'); // Close the modal in Alpine way if inside x-data scope of modal, but this is root scope.
+                        // Since modal has x-on:click="$dispatch('close')", we can simulate that or just use location.reload if lazy.
+                        // I will stick to window.location.reload() for now to be safe with modal states, 
+                        // unless I want to implement seamless update which is better but riskier with modal states.
+                        // Let's stick to reload for Create/Edit, but Search is live.
+                        window.location.reload(); 
                         
                     } catch (error) {
                         console.error(error);
@@ -270,7 +296,7 @@
                         this.loading = false;
                     }
                 },
-
+                // ... deleteStudent ...
                 async deleteStudent(id) {
                     if (!confirm('Apakah Anda yakin ingin menghapus data siswa ini?')) return;
 
@@ -285,7 +311,8 @@
 
                         if (res.ok) {
                             alert('Data siswa berhasil dihapus');
-                            window.location.reload();
+                            // window.location.reload();
+                            this.performSearch(); // Refresh list without reload
                         } else {
                             alert('Gagal menghapus data');
                         }

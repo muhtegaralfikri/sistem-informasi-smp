@@ -9,10 +9,30 @@ use Illuminate\Validation\Rule;
 
 class StudentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Student::with(['classRoom', 'guardian']);
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                  ->orWhere('nis', 'like', "%{$search}%")
+                  ->orWhere('nisn', 'like', "%{$search}%")
+                  ->orWhereHas('classRoom', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->ajax()) {
+            return view('admin.students.partials.table', [
+                'students' => $query->orderBy('full_name')->paginate(15)->withQueryString(),
+            ]);
+        }
+
         return view('admin.students.index', [
-            'students' => Student::with(['classRoom', 'guardian'])->orderBy('full_name')->paginate(15),
+            'students' => $query->orderBy('full_name')->paginate(15)->withQueryString(),
             'classes' => \App\Models\SchoolClass::orderBy('name')->get(),
         ]);
     }
