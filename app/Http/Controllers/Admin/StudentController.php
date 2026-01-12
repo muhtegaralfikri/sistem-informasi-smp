@@ -12,7 +12,8 @@ class StudentController extends Controller
     public function index()
     {
         return view('admin.students.index', [
-            'students' => Student::with(['classRoom', 'guardian'])->orderBy('full_name')->paginate(15)
+            'students' => Student::with(['classRoom', 'guardian'])->orderBy('full_name')->paginate(15),
+            'classes' => \App\Models\SchoolClass::orderBy('name')->get(),
         ]);
     }
 

@@ -18,16 +18,37 @@ class TeacherController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'user_id' => ['required', 'exists:users,id', 'unique:teachers,user_id'],
-            'nip' => ['nullable', 'string', 'max:50', 'unique:teachers,nip'],
+        $request->validate([
             'full_name' => ['required', 'string', 'max:150'],
+            'email' => ['required', 'email', 'max:150', 'unique:users,email'],
+            'nip' => ['nullable', 'string', 'max:50', 'unique:teachers,nip'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'email' => ['nullable', 'email', 'max:150'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
 
-        $teacher = Teacher::create($data);
+        $teacher = \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            // Find Guru role or default to something safe (but likely exists)
+            $role = \App\Models\Role::where('name', 'Guru')->first();
+            
+            // Create User
+            $user = \App\Models\User::create([
+                'name' => $request->full_name,
+                'email' => $request->email,
+                'password' => \Illuminate\Support\Facades\Hash::make('password'), // Default password
+                'role_id' => $role?->id,
+                'status' => 'active',
+            ]);
+
+            // Create Teacher
+            return Teacher::create([
+                'user_id' => $user->id,
+                'full_name' => $request->full_name,
+                'nip' => $request->nip,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'status' => $request->status,
+            ]);
+        });
 
         return response()->json($teacher->load('user'), 201);
     }
@@ -40,7 +61,6 @@ class TeacherController extends Controller
     public function update(Request $request, Teacher $teacher)
     {
         $data = $request->validate([
-            'user_id' => ['sometimes', 'exists:users,id', Rule::unique('teachers', 'user_id')->ignore($teacher->id)],
             'nip' => ['nullable', 'string', 'max:50', Rule::unique('teachers', 'nip')->ignore($teacher->id)],
             'full_name' => ['sometimes', 'string', 'max:150'],
             'phone' => ['nullable', 'string', 'max:20'],

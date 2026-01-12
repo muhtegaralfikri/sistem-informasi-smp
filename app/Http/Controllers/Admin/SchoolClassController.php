@@ -15,7 +15,9 @@ class SchoolClassController extends Controller
             'classes' => SchoolClass::with(['homeroomTeacher', 'semester'])
                 ->orderBy('grade_level')
                 ->orderBy('name')
-                ->paginate(15)
+                ->paginate(15),
+            'teachers' => \App\Models\Teacher::where('status', 'active')->orderBy('full_name')->get(),
+            'semesters' => \App\Models\Semester::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
