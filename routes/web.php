@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\SemesterController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\TeacherController;
+use App\Http\Controllers\Admin\AdminViewController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ProfileController;
@@ -29,6 +30,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/panel', [AdminViewController::class, 'dashboard'])->name('panel');
     Route::resource('academic-years', AcademicYearController::class)->except(['create', 'edit']);
     Route::resource('semesters', SemesterController::class)->except(['create', 'edit']);
     Route::resource('subjects', SubjectController::class)->except(['create', 'edit']);
