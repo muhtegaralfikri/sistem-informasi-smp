@@ -5,8 +5,8 @@
         </h2>
     </x-slot>
 
-    <div class="py-12" x-data="adminDashboard()">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-10">
+    <div x-data="adminDashboard()">
+        <div class="max-w-7xl mx-auto space-y-8">
             
             <!-- Welcome Section -->
             <div class="relative overflow-hidden rounded-2xl bg-indigo-600 px-6 py-8 shadow-xl sm:px-10 sm:py-12">
@@ -19,13 +19,12 @@
             </div>
 
             <!-- Stats Grid -->
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            <div class="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 <template x-for="stat in stats" :key="stat.label">
                     <div class="group relative overflow-hidden rounded-xl bg-white p-5 shadow-sm transition-all hover:shadow-md border border-gray-100">
                         <dt class="truncate text-xs font-semibold uppercase tracking-wider text-gray-500" x-text="stat.label"></dt>
                         <dd class="mt-2 flex items-baseline gap-2">
                             <span class="text-3xl font-extrabold text-gray-900" x-text="stat.value"></span>
-                            <span class="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">+0%</span>
                         </dd>
                         <div class="absolute right-0 top-0 p-3 opacity-10 transition-opacity group-hover:opacity-20">
                             <!-- Placeholder Icon based on label -->
@@ -243,7 +242,6 @@
                     { label: 'Guru', value: {{ $stats['teachers'] }} },
                     { label: 'Kelas', value: {{ $stats['classes'] }} },
                     { label: 'Mapel', value: {{ $stats['subjects'] }} },
-                    { label: 'Wali Murid', value: {{ $stats['guardians'] }} },
                 ],
                 years: @json($years),
                 semesters: @json($semesters->map(fn($s) => $s->setRelation('academicYear', $s->academicYear))),

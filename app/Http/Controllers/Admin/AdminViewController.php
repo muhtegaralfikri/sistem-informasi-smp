@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
-use App\Models\Guardian;
 use App\Models\SchoolClass;
 use App\Models\Semester;
 use App\Models\Student;
@@ -21,7 +20,6 @@ class AdminViewController extends Controller
                 'teachers' => Teacher::count(),
                 'classes' => SchoolClass::count(),
                 'subjects' => Subject::count(),
-                'guardians' => Guardian::count(),
             ],
             'years' => AcademicYear::orderByDesc('start_date')->get(),
             'semesters' => Semester::with('academicYear')->orderByDesc('start_date')->get(),
