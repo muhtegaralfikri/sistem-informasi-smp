@@ -8,7 +8,10 @@ use App\Http\Controllers\Admin\SemesterController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\TeacherController;
+use App\Http\Controllers\AssessmentController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportCardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -34,6 +37,30 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     Route::resource('guardians', GuardianController::class)->except(['create', 'edit']);
     Route::resource('students', StudentController::class)->except(['create', 'edit']);
     Route::resource('class-subjects', ClassSubjectController::class)->except(['create', 'edit']);
+
+    // Absensi
+    Route::get('attendance/sheets', [AttendanceController::class, 'sheetsIndex']);
+    Route::post('attendance/sheets', [AttendanceController::class, 'sheetsStore']);
+    Route::get('attendance/sheets/{sheet}', [AttendanceController::class, 'sheetsShow']);
+    Route::post('attendance/sheets/{sheet}/records', [AttendanceController::class, 'recordsUpsert']);
+    Route::post('attendance/sheets/{sheet}/lock', [AttendanceController::class, 'sheetsLock']);
+
+    // Penilaian
+    Route::get('assessments', [AssessmentController::class, 'index']);
+    Route::post('assessments', [AssessmentController::class, 'store']);
+    Route::get('assessments/{assessment}', [AssessmentController::class, 'show']);
+    Route::put('assessments/{assessment}', [AssessmentController::class, 'update']);
+    Route::patch('assessments/{assessment}', [AssessmentController::class, 'update']);
+    Route::post('assessments/{assessment}/grades', [AssessmentController::class, 'gradesUpsert']);
+
+    // Raport
+    Route::get('report-cards', [ReportCardController::class, 'index']);
+    Route::post('report-cards', [ReportCardController::class, 'store']);
+    Route::get('report-cards/{reportCard}', [ReportCardController::class, 'show']);
+    Route::put('report-cards/{reportCard}', [ReportCardController::class, 'update']);
+    Route::patch('report-cards/{reportCard}', [ReportCardController::class, 'update']);
+    Route::post('report-cards/{reportCard}/items', [ReportCardController::class, 'itemsUpsert']);
+    Route::post('report-cards/{reportCard}/publish', [ReportCardController::class, 'publish']);
 });
 
 require __DIR__.'/auth.php';
