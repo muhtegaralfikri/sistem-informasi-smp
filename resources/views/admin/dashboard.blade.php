@@ -48,7 +48,7 @@
                             </svg>
                             Tahun Ajaran
                         </h3>
-                        <button @click="$dispatch('open-modal', 'create-year-modal')" class="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100">
+                        <button @click="openYearModal('create')" class="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100">
                             + Tambah Data
                         </button>
                     </div>
@@ -73,13 +73,13 @@
                                              <span x-show="year.is_active" class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Aktif</span>
                                         </div>
                                         <div class="mt-1 flex items-center gap-x-2 text-xs leading-5 text-gray-500">
-                                            <span x-text="year.start_date"></span>
+                                            <span x-text="formatDate(year.start_date)"></span>
                                             <svg viewBox="0 0 2 2" class="h-0.5 w-0.5 fill-current"><circle cx="1" cy="1" r="1" /></svg>
-                                            <span x-text="year.end_date"></span>
+                                            <span x-text="formatDate(year.end_date)"></span>
                                         </div>
                                     </div>
                                     <div class="flex flex-none items-center gap-x-4">
-                                        <button class="hidden rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:block">Edit</button>
+                                        <button @click="openYearModal('edit', year)" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 block">Edit</button>
                                     </div>
                                 </li>
                              </template>
@@ -96,7 +96,7 @@
                             </svg>
                             Semester
                         </h3>
-                         <button @click="$dispatch('open-modal', 'create-semester-modal')" class="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100">
+                         <button @click="openSemesterModal('create')" class="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100">
                             + Tambah Data
                         </button>
                     </div>
@@ -123,11 +123,11 @@
                                         <div class="mt-1 flex items-center gap-x-2 text-xs leading-5 text-gray-500">
                                             <span x-text="sem.academic_year?.name"></span>
                                             <svg viewBox="0 0 2 2" class="h-0.5 w-0.5 fill-current"><circle cx="1" cy="1" r="1" /></svg>
-                                            <span x-text="`${sem.start_date} - ${sem.end_date}`"></span>
+                                            <span x-text="`${formatDate(sem.start_date)} - ${formatDate(sem.end_date)}`"></span>
                                         </div>
                                     </div>
                                     <div class="flex flex-none items-center gap-x-4">
-                                        <button class="hidden rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:block">Edit</button>
+                                        <button @click="openSemesterModal('edit', sem)" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 block">Edit</button>
                                     </div>
                                 </li>
                              </template>
@@ -138,9 +138,9 @@
         </div>
 
         <!-- Modals -->
-        <x-modal name="create-year-modal" focusable>
-            <form @submit.prevent="createYear" class="p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Tambah Tahun Ajaran Baru</h2>
+        <x-modal name="year-modal" focusable>
+            <form @submit.prevent="saveYear" class="p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4" x-text="isYearEdit ? 'Edit Tahun Ajaran' : 'Tambah Tahun Ajaran Baru'"></h2>
                 
                 <div class="space-y-4">
                     <div>
@@ -180,9 +180,9 @@
             </form>
         </x-modal>
 
-        <x-modal name="create-semester-modal" focusable>
-             <form @submit.prevent="createSemester" class="p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Tambah Semester Baru</h2>
+        <x-modal name="semester-modal" focusable>
+             <form @submit.prevent="saveSemester" class="p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4" x-text="isSemEdit ? 'Edit Semester' : 'Tambah Semester Baru'"></h2>
 
                 <div class="space-y-4">
                     <div>
@@ -190,7 +190,7 @@
                         <select class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" x-model="formSem.academic_year_id" required>
                             <option value="">-- Pilih Tahun --</option>
                             <template x-for="year in years" :key="year.id">
-                                <option :value="year.id" x-text="year.name"></option>
+                                <option :value="year.id" x-text="year.name" :selected="formSem.academic_year_id == year.id"></option>
                             </template>
                         </select>
                     </div>
@@ -245,38 +245,113 @@
                 ],
                 years: @json($years),
                 semesters: @json($semesters->map(fn($s) => $s->setRelation('academicYear', $s->academicYear))),
+                
+                // Year State
+                isYearEdit: false,
+                yearId: null,
                 formYear: { name: '', start_date: '', end_date: '', is_active: false },
+                
+                // Semester State
+                isSemEdit: false,
+                semId: null,
                 formSem: { academic_year_id: '', name: '', start_date: '', end_date: '', is_active: false },
+                
                 errors: { year: '', semester: '' },
                 loading: false,
 
-                async createYear() {
+                formatDate(dateString) {
+                    if (!dateString) return '-';
+                    const date = new Date(dateString);
+                    return new Intl.DateTimeFormat('id-ID', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    }).format(date);
+                },
+
+                openYearModal(type, data = null) {
+                    this.isYearEdit = type === 'edit';
+                    this.errors.year = '';
+                    if (this.isYearEdit && data) {
+                        this.yearId = data.id;
+                        this.formYear = {
+                            name: data.name,
+                            start_date: data.start_date,
+                            end_date: data.end_date,
+                            is_active: !!data.is_active
+                        };
+                    } else {
+                        this.yearId = null;
+                        this.formYear = { name: '', start_date: '', end_date: '', is_active: false };
+                    }
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'year-modal' }));
+                },
+
+                openSemesterModal(type, data = null) {
+                    this.isSemEdit = type === 'edit';
+                    this.errors.semester = '';
+                    if (this.isSemEdit && data) {
+                        this.semId = data.id;
+                        this.formSem = {
+                            academic_year_id: data.academic_year_id,
+                            name: data.name,
+                            start_date: data.start_date,
+                            end_date: data.end_date,
+                            is_active: !!data.is_active
+                        };
+                    } else {
+                        this.semId = null;
+                        this.formSem = { academic_year_id: '', name: '', start_date: '', end_date: '', is_active: false };
+                    }
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'semester-modal' }));
+                },
+
+                async saveYear() {
                     this.errors.year = '';
                     this.loading = true;
                     
-                    const formData = new FormData();
-                    formData.append('name', this.formYear.name);
-                    formData.append('start_date', this.formYear.start_date);
-                    formData.append('end_date', this.formYear.end_date);
-                    formData.append('is_active', this.formYear.is_active ? '1' : '0');
+                    const url = this.isYearEdit 
+                        ? '{{ route('admin.academic-years.update', ':id') }}'.replace(':id', this.yearId)
+                        : '{{ route('admin.academic-years.store') }}';
 
+                    const method = this.isYearEdit ? 'PUT' : 'POST';
+                    
+                    // Use JSON for PUT/POST consistency, previously used FormData but JSON is easier for PUT
+                    // Controller handles standard Request, so JSON is fine.
+                    
                     try {
-                        const res = await fetch('{{ route('admin.academic-years.store') }}', {
-                            method: 'POST',
+                        const res = await fetch(url, {
+                            method: method,
                             headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Content-Type': 'application/json',
                                 'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             },
-                            body: formData,
+                            body: JSON.stringify(this.formYear),
                         });
+                        
                         if (!res.ok) {
                             const data = await res.json();
                             throw new Error(data.message || 'Gagal simpan');
                         }
+                        
                         const data = await res.json();
-                        this.years.unshift(data);
-                        this.formYear = { name: '', start_date: '', end_date: '', is_active: false };
-                        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'create-year-modal' }));
+                        
+                        if (this.isYearEdit) {
+                            const index = this.years.findIndex(y => y.id === this.yearId);
+                            if (index !== -1) {
+                                this.years[index] = data;
+                            }
+                        } else {
+                            this.years.unshift(data);
+                        }
+
+                        // If set to active, update others in local state optionally, but reload might be safest for 'is_active' consistency
+                        if (this.formYear.is_active) {
+                             window.location.reload(); 
+                        } else {
+                            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'year-modal' }));
+                        }
                     } catch (e) {
                         this.errors.year = e.message;
                     } finally {
@@ -284,34 +359,49 @@
                     }
                 },
 
-                async createSemester() {
+                async saveSemester() {
                     this.errors.semester = '';
                     this.loading = true;
                     
-                    const formData = new FormData();
-                    formData.append('academic_year_id', this.formSem.academic_year_id);
-                    formData.append('name', this.formSem.name);
-                    formData.append('start_date', this.formSem.start_date);
-                    formData.append('end_date', this.formSem.end_date);
-                    formData.append('is_active', this.formSem.is_active ? '1' : '0');
+                    const url = this.isSemEdit 
+                        ? '{{ route('admin.semesters.update', ':id') }}'.replace(':id', this.semId)
+                        : '{{ route('admin.semesters.store') }}';
+
+                    const method = this.isSemEdit ? 'PUT' : 'POST';
 
                     try {
-                        const res = await fetch('{{ route('admin.semesters.store') }}', {
-                            method: 'POST',
+                        const res = await fetch(url, {
+                            method: method,
                             headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Content-Type': 'application/json',
                                 'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             },
-                            body: formData,
+                            body: JSON.stringify(this.formSem),
                         });
+
                         if (!res.ok) {
                             const data = await res.json();
                             throw new Error(data.message || 'Gagal simpan');
                         }
+                        
                         const data = await res.json();
-                        this.semesters.unshift(data);
-                        this.formSem = { academic_year_id: '', name: '', start_date: '', end_date: '', is_active: false };
-                        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'create-semester-modal' }));
+                        
+                        if (this.isSemEdit) {
+                            const index = this.semesters.findIndex(s => s.id === this.semId);
+                            if (index !== -1) {
+                                // Re-attach academicYear relation if missing in response (controller seems to return fresh('academicYear'))
+                                this.semesters[index] = data; 
+                            }
+                        } else {
+                            this.semesters.unshift(data);
+                        }
+
+                        if (this.formSem.is_active) {
+                             window.location.reload(); 
+                        } else {
+                            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'semester-modal' }));
+                        }
                     } catch (e) {
                         this.errors.semester = e.message;
                     } finally {
