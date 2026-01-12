@@ -10,6 +10,7 @@
   - Absensi: list/buat sheet, upsert record, lock sheet.
   - Penilaian: CRUD assessment, upsert nilai per assessment.
   - Raport: create/update draft, upsert item mapel, publish.
+- Admin Panel (Blade) untuk Admin TU di `/admin/panel`: ringkasan angka + form/daftar Tahun Ajaran & Semester (AJAX ke API admin).
 
 ## Belum Selesai
 - Business logic lebih lengkap: perhitungan bobot total = 100%, agregasi nilai -> raport, validasi kelas/semester aktif.
