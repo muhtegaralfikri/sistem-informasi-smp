@@ -11,7 +11,9 @@ class SubjectController extends Controller
 {
     public function index()
     {
-        return response()->json(Subject::orderBy('name')->get());
+        return view('admin.subjects.index', [
+            'subjects' => Subject::orderBy('name')->paginate(15)
+        ]);
     }
 
     public function store(Request $request)

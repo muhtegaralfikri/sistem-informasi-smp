@@ -11,7 +11,9 @@ class TeacherController extends Controller
 {
     public function index()
     {
-        return response()->json(Teacher::with('user')->orderBy('full_name')->get());
+        return view('admin.teachers.index', [
+            'teachers' => Teacher::with('user')->orderBy('full_name')->paginate(15)
+        ]);
     }
 
     public function store(Request $request)

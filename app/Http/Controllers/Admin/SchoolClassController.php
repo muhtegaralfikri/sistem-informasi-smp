@@ -11,9 +11,12 @@ class SchoolClassController extends Controller
 {
     public function index()
     {
-        return response()->json(
-            SchoolClass::with(['homeroomTeacher', 'semester'])->orderBy('grade_level')->orderBy('name')->get()
-        );
+        return view('admin.classes.index', [
+            'classes' => SchoolClass::with(['homeroomTeacher', 'semester'])
+                ->orderBy('grade_level')
+                ->orderBy('name')
+                ->paginate(15)
+        ]);
     }
 
     public function store(Request $request)

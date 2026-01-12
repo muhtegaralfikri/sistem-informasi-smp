@@ -11,9 +11,9 @@ class StudentController extends Controller
 {
     public function index()
     {
-        return response()->json(
-            Student::with(['classRoom', 'guardian'])->orderBy('full_name')->get()
-        );
+        return view('admin.students.index', [
+            'students' => Student::with(['classRoom', 'guardian'])->orderBy('full_name')->paginate(15)
+        ]);
     }
 
     public function store(Request $request)
