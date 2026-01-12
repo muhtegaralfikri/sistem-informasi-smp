@@ -19,6 +19,21 @@
                         <x-nav-link :href="route('admin.panel')" :active="request()->is('admin/panel')">
                             Admin Panel
                         </x-nav-link>
+                        <x-nav-link :href="route('admin.attendance')" :active="request()->is('admin/attendance')">
+                            Absensi
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.assessments.ui')" :active="request()->is('admin/assessments/ui')">
+                            Penilaian
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.report-cards.ui')" :active="request()->is('admin/report-cards/ui')">
+                            Raport
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.announcements')" :active="request()->is('admin/announcements')">
+                            Pengumuman
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.parent-portal')" :active="request()->is('admin/parent-portal')">
+                            Portal Orang Tua
+                        </x-nav-link>
                     @endif
                 </div>
             </div>
@@ -75,6 +90,26 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @if(Auth::user()?->role?->name === 'Admin TU')
+                <x-responsive-nav-link :href="route('admin.panel')" :active="request()->is('admin/panel')">
+                    Admin Panel
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.attendance')" :active="request()->is('admin/attendance')">
+                    Absensi
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.assessments.ui')" :active="request()->is('admin/assessments/ui')">
+                    Penilaian
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.report-cards.ui')" :active="request()->is('admin/report-cards/ui')">
+                    Raport
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.announcements')" :active="request()->is('admin/announcements')">
+                    Pengumuman
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.parent-portal')" :active="request()->is('admin/parent-portal')">
+                    Portal Orang Tua
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

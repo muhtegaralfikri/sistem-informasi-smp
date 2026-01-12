@@ -40,6 +40,13 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     Route::resource('students', StudentController::class)->except(['create', 'edit']);
     Route::resource('class-subjects', ClassSubjectController::class)->except(['create', 'edit']);
 
+    // Views (frontend-first, backend wiring later)
+    Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance');
+    Route::get('/assessments/ui', [AdminViewController::class, 'assessments'])->name('assessments.ui');
+    Route::get('/report-cards/ui', [AdminViewController::class, 'reportCards'])->name('report-cards.ui');
+    Route::get('/announcements', [AdminViewController::class, 'announcements'])->name('announcements');
+    Route::get('/parent-portal', [AdminViewController::class, 'parentPortalPreview'])->name('parent-portal');
+
     // Absensi
     Route::get('attendance/sheets', [AttendanceController::class, 'sheetsIndex']);
     Route::post('attendance/sheets', [AttendanceController::class, 'sheetsStore']);
