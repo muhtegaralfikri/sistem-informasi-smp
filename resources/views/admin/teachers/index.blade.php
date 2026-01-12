@@ -10,7 +10,7 @@
             <x-card>
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-medium text-gray-900">Daftar Guru</h3>
-                    <button @click="$dispatch('open-modal', 'create-teacher-modal')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <button @click="openModal('create')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         + Tambah Guru
                     </button>
                 </div>
@@ -34,7 +34,8 @@
                                 </x-badge>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
+                                <button @click="openModal('edit', {{ $teacher }})" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                                <button @click="deleteTeacher({{ $teacher->id }})" class="text-red-600 hover:text-red-900">Hapus</button>
                             </td>
                         </tr>
                     @empty
@@ -52,10 +53,10 @@
             </x-card>
         </div>
 
-         <!-- Create Teacher Modal -->
-        <x-modal name="create-teacher-modal" focusable>
-            <form @submit.prevent="storeTeacher" class="p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Tambah Guru Baru</h2>
+         <!-- Teacher Form Modal -->
+        <x-modal name="teacher-modal" focusable>
+            <form @submit.prevent="saveTeacher" class="p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4" x-text="isEdit ? 'Edit Data Guru' : 'Tambah Guru Baru'"></h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="col-span-2">
@@ -108,6 +109,8 @@
     <script>
         function teacherPage() {
             return {
+                isEdit: false,
+                currentId: null,
                 form: {
                     full_name: '',
                     nip: '',
@@ -118,13 +121,45 @@
                 errors: {},
                 loading: false,
 
-                async storeTeacher() {
+                openModal(type, data = null) {
+                    this.isEdit = type === 'edit';
+                    this.errors = {};
+                    
+                    if (this.isEdit && data) {
+                        this.currentId = data.id;
+                        this.form = {
+                            full_name: data.full_name,
+                            nip: data.nip || '',
+                            email: data.email || '',
+                            phone: data.phone || '',
+                            status: data.status
+                        };
+                    } else {
+                        this.currentId = null;
+                        this.form = {
+                            full_name: '',
+                            nip: '',
+                            email: '',
+                            phone: '',
+                            status: 'active'
+                        };
+                    }
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'teacher-modal' }));
+                },
+
+                async saveTeacher() {
                     this.loading = true;
                     this.errors = {};
                     
+                    const url = this.isEdit 
+                        ? '{{ route('admin.teachers.update', ':id') }}'.replace(':id', this.currentId)
+                        : '{{ route('admin.teachers.store') }}';
+                    
+                    const method = this.isEdit ? 'PUT' : 'POST';
+
                     try {
-                        const res = await fetch('{{ route('admin.teachers.store') }}', {
-                            method: 'POST',
+                        const res = await fetch(url, {
+                            method: method,
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
@@ -144,8 +179,7 @@
                             return;
                         }
 
-                        // Success
-                        alert('Guru berhasil ditambahkan. Password default: password');
+                        alert(this.isEdit ? 'Data berhasil diperbarui' : 'Guru berhasil ditambahkan. Password default: password');
                         window.location.reload();
                         
                     } catch (error) {
@@ -153,6 +187,29 @@
                         alert('Terjadi kesalahan jaringan');
                     } finally {
                         this.loading = false;
+                    }
+                },
+
+                async deleteTeacher(id) {
+                    if (!confirm('Apakah Anda yakin ingin menghapus data guru ini? Akun user terkait mungkin tidak terhapus otomatis (tergantung sistem).')) return;
+
+                    try {
+                        const res = await fetch('{{ route('admin.teachers.destroy', ':id') }}'.replace(':id', id), {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (res.ok) {
+                            alert('Data guru berhasil dihapus');
+                            window.location.reload();
+                        } else {
+                            alert('Gagal menghapus data');
+                        }
+                    } catch(e) {
+                         alert('Terjadi kesalahan jaringan');
                     }
                 }
             }

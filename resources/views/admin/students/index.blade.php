@@ -10,7 +10,7 @@
             <x-card>
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-medium text-gray-900">Daftar Siswa</h3>
-                    <button @click="$dispatch('open-modal', 'create-student-modal')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <button @click="openModal('create')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         + Tambah Siswa
                     </button>
                 </div>
@@ -35,8 +35,9 @@
                                 </x-badge>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">Detail</a>
-                                <a href="#" class="text-amber-600 hover:text-amber-900">Edit</a>
+                                <button @click="openDetail({{ $student }})" class="text-indigo-600 hover:text-indigo-900 mr-3">Detail</button>
+                                <button @click="openModal('edit', {{ $student }})" class="text-amber-600 hover:text-amber-900 mr-3">Edit</button>
+                                <button @click="deleteStudent({{ $student->id }})" class="text-red-600 hover:text-red-900">Hapus</button>
                             </td>
                         </tr>
                     @empty
@@ -54,10 +55,10 @@
             </x-card>
         </div>
 
-        <!-- Create Student Modal -->
-        <x-modal name="create-student-modal" focusable>
-            <form @submit.prevent="storeStudent" class="p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Tambah Siswa Baru</h2>
+        <!-- Student Form Modal (Create/Edit) -->
+        <x-modal name="student-modal" focusable>
+            <form @submit.prevent="saveStudent" class="p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4" x-text="isEdit ? 'Edit Data Siswa' : 'Tambah Siswa Baru'"></h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="col-span-2">
@@ -124,11 +125,62 @@
                 </div>
             </form>
         </x-modal>
+
+        <!-- Detail Modal -->
+        <x-modal name="detail-student-modal" focusable>
+            <div class="p-6" x-data="{ student: null }" @open-detail.window="student = $event.detail">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Detail Siswa</h2>
+                <template x-if="student">
+                    <div class="space-y-3">
+                         <div>
+                            <span class="block text-xs text-gray-500 uppercase tracking-wider">Nama Lengkap</span>
+                            <span class="block text-sm font-medium text-gray-900" x-text="student.full_name"></span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="block text-xs text-gray-500 uppercase tracking-wider">NIS</span>
+                                <span class="block text-sm font-medium text-gray-900" x-text="student.nis"></span>
+                            </div>
+                             <div>
+                                <span class="block text-xs text-gray-500 uppercase tracking-wider">NISN</span>
+                                <span class="block text-sm font-medium text-gray-900" x-text="student.nisn"></span>
+                            </div>
+                        </div>
+                         <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="block text-xs text-gray-500 uppercase tracking-wider">Jenis Kelamin</span>
+                                <span class="block text-sm font-medium text-gray-900" x-text="student.gender == 'male' ? 'Laki-laki' : 'Perempuan'"></span>
+                            </div>
+                             <div>
+                                <span class="block text-xs text-gray-500 uppercase tracking-wider">Tanggal Lahir</span>
+                                <span class="block text-sm font-medium text-gray-900" x-text="student.birth_date || '-'"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="block text-xs text-gray-500 uppercase tracking-wider">Kelas</span>
+                            <span class="block text-sm font-medium text-gray-900" x-text="student.class_room?.name || 'Belum ada kelas'"></span>
+                        </div>
+                         <div>
+                            <span class="block text-xs text-gray-500 uppercase tracking-wider">Status</span>
+                            <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20" x-show="student.status === 'active'">Aktif</span>
+                            <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10" x-show="student.status !== 'active'">Nonaktif</span>
+                        </div>
+                    </div>
+                </template>
+                 <div class="mt-6 flex justify-end">
+                     <button type="button" x-on:click="$dispatch('close')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </x-modal>
     </div>
 
     <script>
         function studentPage() {
             return {
+                isEdit: false,
+                currentId: null,
                 form: {
                     full_name: '',
                     nis: '',
@@ -141,13 +193,54 @@
                 errors: {},
                 loading: false,
 
-                async storeStudent() {
+                openModal(type, data = null) {
+                    this.isEdit = type === 'edit';
+                    this.errors = {};
+                    
+                    if (this.isEdit && data) {
+                        this.currentId = data.id;
+                        this.form = {
+                            full_name: data.full_name,
+                            nis: data.nis,
+                            nisn: data.nisn,
+                            gender: data.gender,
+                            birth_date: data.birth_date ? data.birth_date.split('T')[0] : '',
+                            class_id: data.class_id || '',
+                            status: data.status
+                        };
+                    } else {
+                        this.currentId = null;
+                        this.form = {
+                            full_name: '',
+                            nis: '',
+                            nisn: '',
+                            gender: 'male',
+                            birth_date: '',
+                            class_id: '',
+                            status: 'active'
+                        };
+                    }
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'student-modal' }));
+                },
+
+                openDetail(data) {
+                    window.dispatchEvent(new CustomEvent('open-detail', { detail: data }));
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'detail-student-modal' }));
+                },
+
+                async saveStudent() {
                     this.loading = true;
                     this.errors = {};
                     
+                    const url = this.isEdit 
+                        ? '{{ route('admin.students.update', ':id') }}'.replace(':id', this.currentId)
+                        : '{{ route('admin.students.store') }}';
+                    
+                    const method = this.isEdit ? 'PUT' : 'POST';
+
                     try {
-                        const res = await fetch('{{ route('admin.students.store') }}', {
-                            method: 'POST',
+                        const res = await fetch(url, {
+                            method: method,
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
@@ -167,8 +260,7 @@
                             return;
                         }
 
-                        // Success
-                        alert('Siswa berhasil ditambahkan');
+                        alert(this.isEdit ? 'Data berhasil diperbarui' : 'Siswa berhasil ditambahkan');
                         window.location.reload();
                         
                     } catch (error) {
@@ -176,6 +268,29 @@
                         alert('Terjadi kesalahan jaringan');
                     } finally {
                         this.loading = false;
+                    }
+                },
+
+                async deleteStudent(id) {
+                    if (!confirm('Apakah Anda yakin ingin menghapus data siswa ini?')) return;
+
+                    try {
+                        const res = await fetch('{{ route('admin.students.destroy', ':id') }}'.replace(':id', id), {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (res.ok) {
+                            alert('Data siswa berhasil dihapus');
+                            window.location.reload();
+                        } else {
+                            alert('Gagal menghapus data');
+                        }
+                    } catch(e) {
+                         alert('Terjadi kesalahan jaringan');
                     }
                 }
             }

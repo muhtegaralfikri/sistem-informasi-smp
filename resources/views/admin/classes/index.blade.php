@@ -10,7 +10,7 @@
             <x-card>
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-medium text-gray-900">Daftar Kelas</h3>
-                    <button @click="$dispatch('open-modal', 'create-class-modal')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <button @click="openModal('create')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         + Tambah Kelas
                     </button>
                 </div>
@@ -34,8 +34,9 @@
                                 {{ $class->semester?->name ?? '-' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">Detail</a>
-                                <a href="#" class="text-amber-600 hover:text-amber-900">Edit</a>
+                                <button @click="openDetail({{ $class }})" class="text-indigo-600 hover:text-indigo-900 mr-3">Detail</button>
+                                <button @click="openModal('edit', {{ $class }})" class="text-amber-600 hover:text-amber-900 mr-3">Edit</button>
+                                <button @click="deleteClass({{ $class->id }})" class="text-red-600 hover:text-red-900">Hapus</button>
                             </td>
                         </tr>
                     @empty
@@ -53,10 +54,10 @@
             </x-card>
         </div>
 
-        <!-- Create Class Modal -->
-        <x-modal name="create-class-modal" focusable>
-            <form @submit.prevent="storeClass" class="p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Tambah Kelas Baru</h2>
+        <!-- Class Form Modal (Create/Edit) -->
+        <x-modal name="class-modal" focusable>
+            <form @submit.prevent="saveClass" class="p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4" x-text="isEdit ? 'Edit Data Kelas' : 'Tambah Kelas Baru'"></h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -115,11 +116,51 @@
                 </div>
             </form>
         </x-modal>
+
+        <!-- Detail Modal -->
+        <x-modal name="detail-class-modal" focusable>
+            <div class="p-6" x-data="{ classData: null }" @open-detail.window="classData = $event.detail">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Detail Kelas</h2>
+                <template x-if="classData">
+                    <div class="space-y-3">
+                         <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="block text-xs text-gray-500 uppercase tracking-wider">Nama Kelas</span>
+                                <span class="block text-sm font-medium text-gray-900" x-text="classData.name"></span>
+                            </div>
+                             <div>
+                                <span class="block text-xs text-gray-500 uppercase tracking-wider">Tingkat</span>
+                                <span class="block text-sm font-medium text-gray-900" x-text="'Kelas ' + classData.grade_level"></span>
+                            </div>
+                        </div>
+                         <div>
+                            <span class="block text-xs text-gray-500 uppercase tracking-wider">Wali Kelas</span>
+                            <span class="block text-sm font-medium text-gray-900" x-text="classData.homeroom_teacher?.full_name || '-'"></span>
+                        </div>
+                        <div>
+                            <span class="block text-xs text-gray-500 uppercase tracking-wider">Semester</span>
+                             <span class="block text-sm font-medium text-gray-900" x-text="classData.semester?.name || '-'"></span>
+                        </div>
+                         <div x-show="classData.major">
+                             <span class="block text-xs text-gray-500 uppercase tracking-wider">Jurusan</span>
+                            <span class="block text-sm font-medium text-gray-900" x-text="classData.major"></span>
+                        </div>
+                    </div>
+                </template>
+                 <div class="mt-6 flex justify-end">
+                     <button type="button" x-on:click="$dispatch('close')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </x-modal>
     </div>
 
     <script>
         function classPage() {
             return {
+                isEdit: false,
+                currentId: null,
                 form: {
                     name: '',
                     grade_level: '7',
@@ -130,13 +171,50 @@
                 errors: {},
                 loading: false,
 
-                async storeClass() {
+                openModal(type, data = null) {
+                    this.isEdit = type === 'edit';
+                    this.errors = {};
+                    
+                    if (this.isEdit && data) {
+                        this.currentId = data.id;
+                        this.form = {
+                            name: data.name,
+                            grade_level: data.grade_level,
+                            homeroom_teacher_id: data.homeroom_teacher_id || '',
+                            semester_id: data.semester_id || '',
+                            major: data.major || ''
+                        };
+                    } else {
+                        this.currentId = null;
+                        this.form = {
+                            name: '',
+                            grade_level: '7',
+                            homeroom_teacher_id: '',
+                            semester_id: '',
+                            major: ''
+                        };
+                    }
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'class-modal' }));
+                },
+
+                openDetail(data) {
+                    window.dispatchEvent(new CustomEvent('open-detail', { detail: data }));
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'detail-class-modal' }));
+                },
+
+                async saveClass() {
                     this.loading = true;
                     this.errors = {};
                     
+                    const url = this.isEdit 
+                        ? '{{ route('admin.classes.update', ':id') }}'.replace(':id', this.currentId)
+                        : '{{ route('admin.classes.store') }}';
+                    
+                    const method = this.isEdit ? 'PUT' : 'POST';
+
                     try {
-                        const res = await fetch('{{ route('admin.classes.store') }}', {
-                            method: 'POST',
+                        const res = await fetch(url, {
+                            method: method,
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
@@ -156,8 +234,7 @@
                             return;
                         }
 
-                        // Success
-                        alert('Kelas berhasil ditambahkan');
+                        alert(this.isEdit ? 'Data berhasil diperbarui' : 'Kelas berhasil ditambahkan');
                         window.location.reload();
                         
                     } catch (error) {
@@ -165,6 +242,29 @@
                         alert('Terjadi kesalahan jaringan');
                     } finally {
                         this.loading = false;
+                    }
+                },
+
+                 async deleteClass(id) {
+                    if (!confirm('Apakah Anda yakin ingin menghapus kelas ini?')) return;
+
+                    try {
+                        const res = await fetch('{{ route('admin.classes.destroy', ':id') }}'.replace(':id', id), {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (res.ok) {
+                            alert('Data kelas berhasil dihapus');
+                            window.location.reload();
+                        } else {
+                            alert('Gagal menghapus data');
+                        }
+                    } catch(e) {
+                         alert('Terjadi kesalahan jaringan');
                     }
                 }
             }
