@@ -11,9 +11,23 @@ class ClassSubjectController extends Controller
 {
     public function index()
     {
-        return response()->json(
-            ClassSubject::with(['classRoom', 'subject', 'teacher'])->orderBy('class_id')->get()
-        );
+        $user = auth()->user();
+        $role = $user?->role?->name;
+
+        $query = ClassSubject::with(['classRoom', 'subject', 'teacher'])->orderBy('class_id');
+
+        // Filter by teacher_id if Guru role
+        if ($role === 'Guru') {
+            $teacher = \App\Models\Teacher::where('user_id', $user->id)->first();
+            if ($teacher) {
+                $query->where('teacher_id', $teacher->id);
+            } else {
+                // No teacher record, return empty
+                return response()->json([]);
+            }
+        }
+
+        return response()->json($query->get());
     }
 
     public function getByClass($classId)
