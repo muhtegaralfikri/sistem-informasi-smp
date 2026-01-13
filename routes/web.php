@@ -103,7 +103,7 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
 
 // Guru: absensi & penilaian (kelas-mapel yang diajar)
 Route::middleware(['auth', 'verified', 'role:Guru'])->prefix('guru')->name('guru.')->group(function () {
-    Route::get('/dashboard', fn () => view('guru.dashboard'))->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Guru\GuruController::class, 'dashboard'])->name('dashboard');
     Route::get('/assessments', [AdminViewController::class, 'assessments'])->name('assessments.ui');
     Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance.ui');
 });
