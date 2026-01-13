@@ -1,11 +1,7 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-900 leading-tight">
-            {{ __('Data Siswa') }}
-        </h2>
-    </x-slot>
 
-    <div class="py-12" x-data="studentPage()">
+
+    <div x-data="studentPage()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <x-card>
                 <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
