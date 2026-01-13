@@ -72,4 +72,18 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     Route::post('report-cards/{reportCard}/publish', [ReportCardController::class, 'publish']);
 });
 
+// Guru: absensi & penilaian (kelas-mapel yang diajar)
+Route::middleware(['auth', 'verified', 'role:Guru'])->prefix('guru')->name('guru.')->group(function () {
+    Route::get('/dashboard', fn () => view('guru.dashboard'))->name('dashboard');
+    Route::get('/assessments', [AdminViewController::class, 'assessments'])->name('assessments.ui');
+    Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance.ui');
+});
+
+// Wali Kelas: rekap absensi kelasnya, approval raport
+Route::middleware(['auth', 'verified', 'role:Wali Kelas'])->prefix('wali')->name('wali.')->group(function () {
+    Route::get('/dashboard', fn () => view('wali.dashboard'))->name('dashboard');
+    Route::get('/report-cards', [AdminViewController::class, 'reportCards'])->name('report-cards.ui');
+    Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance.ui');
+});
+
 require __DIR__.'/auth.php';

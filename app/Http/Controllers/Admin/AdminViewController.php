@@ -15,6 +15,7 @@ use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class AdminViewController extends Controller
 {
@@ -34,25 +35,29 @@ class AdminViewController extends Controller
 
     public function attendance()
     {
+        [$classes, $subjects, $teachers, $students, $sheets] = $this->attendanceScopedData();
+
         return view('admin.attendance.index', [
-            'classes' => SchoolClass::with('homeroomTeacher')->orderBy('grade_level')->orderBy('name')->get(),
-            'subjects' => Subject::orderBy('name')->get(),
-            'teachers' => Teacher::orderBy('full_name')->get(),
-            'students' => Student::orderBy('full_name')->limit(50)->get(),
-            'sheets' => AttendanceSheet::with(['classRoom', 'subject', 'teacher'])
-                ->orderByDesc('date')
-                ->orderByDesc('created_at')
-                ->limit(10)
-                ->get(),
+            'classes' => $classes,
+            'subjects' => $subjects,
+            'teachers' => $teachers,
+            'students' => $students,
+            'sheets' => $sheets,
         ]);
     }
 
     public function assessments()
     {
-        $assessments = Assessment::with(['classSubject.classRoom', 'classSubject.subject'])
-            ->orderByDesc('created_at')
-            ->limit(12)
-            ->get();
+        $role = Auth::user()?->role?->name;
+        $teacher = $this->currentTeacher();
+        $assessmentQuery = Assessment::with(['classSubject.classRoom', 'classSubject.subject'])
+            ->orderByDesc('created_at');
+
+        if ($role === 'Guru' && $teacher) {
+            $assessmentQuery->whereHas('classSubject', fn ($q) => $q->where('teacher_id', $teacher->id));
+        }
+
+        $assessments = $assessmentQuery->limit(12)->get();
 
         $weightStats = $assessments
             ->groupBy('class_subject_id')
@@ -106,10 +111,17 @@ class AdminViewController extends Controller
 
     public function reportCards()
     {
-        $reports = ReportCard::with(['student.classRoom', 'semester'])
-            ->orderByDesc('created_at')
-            ->limit(50)
-            ->get();
+        $role = Auth::user()?->role?->name;
+        $teacher = $this->currentTeacher();
+
+        $reportQuery = ReportCard::with(['student.classRoom.homeroomTeacher', 'semester'])
+            ->orderByDesc('created_at');
+
+        if ($role === 'Wali Kelas' && $teacher) {
+            $reportQuery->whereHas('student.classRoom', fn ($q) => $q->where('homeroom_teacher_id', $teacher->id));
+        }
+
+        $reports = $reportQuery->limit(50)->get();
 
         $reportPayload = $reports->map(function ($r) {
             return [
@@ -201,5 +213,50 @@ class AdminViewController extends Controller
                 ->values()
                 ->toArray(),
         ]);
+    }
+
+    private function currentTeacher(): ?Teacher
+    {
+        $userId = Auth::id();
+        if (!$userId) {
+            return null;
+        }
+        return Teacher::where('user_id', $userId)->first();
+    }
+
+    private function attendanceScopedData(): array
+    {
+        $role = Auth::user()?->role?->name;
+        $teacher = $this->currentTeacher();
+
+        $classesQuery = SchoolClass::with('homeroomTeacher')->orderBy('grade_level')->orderBy('name');
+        $subjectsQuery = Subject::orderBy('name');
+        $teachersQuery = Teacher::orderBy('full_name');
+        $studentsQuery = Student::orderBy('full_name');
+        $sheetsQuery = AttendanceSheet::with(['classRoom', 'subject', 'teacher'])->orderByDesc('date')->orderByDesc('created_at');
+
+        if ($role === 'Guru' && $teacher) {
+            $classesQuery->whereHas('classSubjects', fn ($q) => $q->where('teacher_id', $teacher->id));
+            $subjectsQuery->whereIn('id', ClassSubject::where('teacher_id', $teacher->id)->pluck('subject_id'));
+            $teachersQuery->where('id', $teacher->id);
+            $studentsQuery->whereHas('classRoom', fn ($q) => $q->whereHas('classSubjects', fn ($cq) => $cq->where('teacher_id', $teacher->id)));
+            $sheetsQuery->where('teacher_id', $teacher->id);
+        }
+
+        if ($role === 'Wali Kelas' && $teacher) {
+            $classesQuery->where('homeroom_teacher_id', $teacher->id);
+            $subjectsQuery->whereIn('id', ClassSubject::whereHas('classRoom', fn ($q) => $q->where('homeroom_teacher_id', $teacher->id))->pluck('subject_id'));
+            $teachersQuery->where('id', $teacher->id);
+            $studentsQuery->whereHas('classRoom', fn ($q) => $q->where('homeroom_teacher_id', $teacher->id));
+            $sheetsQuery->whereHas('classRoom', fn ($q) => $q->where('homeroom_teacher_id', $teacher->id));
+        }
+
+        return [
+            $classesQuery->get(),
+            $subjectsQuery->get(),
+            $teachersQuery->get(),
+            $studentsQuery->limit(50)->get(),
+            $sheetsQuery->limit(10)->get(),
+        ];
     }
 }

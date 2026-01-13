@@ -8,7 +8,8 @@
 </li>
 
 @auth
-    @if(auth()->user()->role?->name === 'Admin TU')
+    @php $roleName = auth()->user()->role?->name; @endphp
+    @if($roleName === 'Admin TU')
     <li>
         <div class="text-xs font-semibold leading-6 text-gray-400 mt-4 mb-2">Administrasi</div>
         <ul role="list" class="-mx-2 space-y-1">
@@ -52,44 +53,64 @@
                     Mata Pelajaran
                 </a>
             </li>
+        </ul>
+    </li>
+    @elseif($roleName === 'Guru')
+    <li>
+        <div class="text-xs font-semibold leading-6 text-gray-400 mt-4 mb-2">Guru</div>
+        <ul role="list" class="-mx-2 space-y-1">
             <li>
-                <a href="{{ route('admin.attendance') }}" class="{{ request()->is('admin/attendance') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                    <svg class="{{ request()->is('admin/attendance') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <a href="{{ route('guru.dashboard') }}" class="{{ request()->is('guru/dashboard') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('guru/dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5h16.5M3.75 9h16.5M3.75 13.5h16.5M3.75 18h7.5" />
+                    </svg>
+                    Dashboard Guru
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('guru.attendance.ui') }}" class="{{ request()->is('guru/attendance') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('guru/attendance') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5M3.75 9.75h16.5m-16.5 4.5H12m-8.25 4.5h8.25" />
                     </svg>
                     Absensi
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.assessments.ui') }}" class="{{ request()->is('admin/assessments/ui') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                    <svg class="{{ request()->is('admin/assessments/ui') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <a href="{{ route('guru.assessments.ui') }}" class="{{ request()->is('guru/assessments') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('guru/assessments') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-6-6h12" />
                     </svg>
                     Penilaian
                 </a>
             </li>
+        </ul>
+    </li>
+    @elseif($roleName === 'Wali Kelas')
+    <li>
+        <div class="text-xs font-semibold leading-6 text-gray-400 mt-4 mb-2">Wali Kelas</div>
+        <ul role="list" class="-mx-2 space-y-1">
             <li>
-                <a href="{{ route('admin.report-cards.ui') }}" class="{{ request()->is('admin/report-cards/ui') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                    <svg class="{{ request()->is('admin/report-cards/ui') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <a href="{{ route('wali.dashboard') }}" class="{{ request()->is('wali/dashboard') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('wali/dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-6-6h12" />
+                    </svg>
+                    Dashboard Wali
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('wali.attendance.ui') }}" class="{{ request()->is('wali/attendance') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('wali/attendance') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5M3.75 9.75h16.5m-16.5 4.5H12m-8.25 4.5h8.25" />
+                    </svg>
+                    Absensi
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('wali.report-cards.ui') }}" class="{{ request()->is('wali/report-cards') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('wali/report-cards') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 7.5l3 3 6-6M4.5 6.75h7.5M4.5 12h4.5M4.5 17.25H9" />
                     </svg>
-                    Raport
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.announcements') }}" class="{{ request()->is('admin/announcements') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                    <svg class="{{ request()->is('admin/announcements') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 8.25l7.5-3 7.5 3m-15 0l7.5 3 7.5-3m-15 0v6.75l7.5 3m7.5-9.75v6.75l-7.5 3m0-6.75v6.75" />
-                    </svg>
-                    Pengumuman
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.parent-portal') }}" class="{{ request()->is('admin/parent-portal') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                    <svg class="{{ request()->is('admin/parent-portal') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a3 3 0 110 6 3 3 0 010-6zm0 0c3.728 0 6.75 1.567 6.75 3.5S15.728 13.75 12 13.75s-6.75-1.567-6.75-3.5S8.272 6.75 12 6.75zm-6.75 9c0-1.933 3.022-3.5 6.75-3.5s6.75 1.567 6.75 3.5-3.022 3.5-6.75 3.5-6.75-1.567-6.75-3.5z" />
-                    </svg>
-                    Portal Orang Tua
+                    Raport Kelas
                 </a>
             </li>
         </ul>
