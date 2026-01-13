@@ -93,6 +93,12 @@ Route::middleware(['auth', 'verified', 'role:Wali Kelas'])->prefix('wali')->name
     Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance.ui');
 });
 
+// Kepala Sekolah: dashboard & reports
+Route::middleware(['auth', 'verified', 'role:Kepala Sekolah'])->prefix('kepsek')->name('kepsek.')->group(function () {
+    Route::get('/dashboard', [AdminViewController::class, 'dashboard'])->name('dashboard');
+    Route::get('/report-cards', [AdminViewController::class, 'reportCards'])->name('report-cards');
+});
+
 // Orang Tua: portal orang tua
 Route::middleware(['auth', 'verified', 'role:Orang Tua'])->prefix('parent')->name('parent.')->group(function () {
     Route::get('/dashboard', [ParentPortalController::class, 'dashboard'])->name('dashboard');
