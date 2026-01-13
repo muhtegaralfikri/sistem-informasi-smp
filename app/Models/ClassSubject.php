@@ -35,6 +35,11 @@ class ClassSubject extends Model
         return $this->hasMany(Assessment::class);
     }
 
+    public function schedules()
+    {
+        return $this->hasMany(ClassSchedule::class);
+    }
+
     /**
      * Get total weight for this class subject
      */

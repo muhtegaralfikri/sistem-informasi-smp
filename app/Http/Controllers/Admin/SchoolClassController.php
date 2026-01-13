@@ -18,6 +18,7 @@ class SchoolClassController extends Controller
                 ->paginate(15),
             'teachers' => \App\Models\Teacher::where('status', 'active')->orderBy('full_name')->get(),
             'semesters' => \App\Models\Semester::where('is_active', true)->orderBy('name')->get(),
+            'subjects' => \App\Models\Subject::orderBy('name')->get(),
         ]);
     }
 
