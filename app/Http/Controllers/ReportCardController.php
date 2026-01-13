@@ -4,11 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\ReportCard;
 use App\Models\ReportCardItem;
+use App\Services\ReportCardPdfService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ReportCardController extends Controller
 {
+    private ReportCardPdfService $pdfService;
+
+    public function __construct(ReportCardPdfService $pdfService)
+    {
+        $this->pdfService = $pdfService;
+    }
+
     public function index()
     {
         return response()->json(
@@ -41,7 +51,7 @@ class ReportCardController extends Controller
 
     public function show(ReportCard $reportCard)
     {
-        return response()->json($reportCard->load(['items', 'student', 'semester']));
+        return response()->json($reportCard->load(['items.subject', 'student.schoolClass', 'semester.academicYear']));
     }
 
     public function update(Request $request, ReportCard $reportCard)
@@ -85,7 +95,14 @@ class ReportCardController extends Controller
             );
         }
 
-        return response()->json($reportCard->load('items'));
+        // Update totals
+        $scores = collect($payload['items'])->pluck('final_score');
+        $reportCard->update([
+            'total_score' => $scores->sum(),
+            'average_score' => $scores->avg(),
+        ]);
+
+        return response()->json($reportCard->load('items.subject'));
     }
 
     public function publish(ReportCard $reportCard)
@@ -96,5 +113,63 @@ class ReportCardController extends Controller
         ]);
 
         return response()->json($reportCard);
+    }
+
+    /**
+     * Generate PDF for report card
+     */
+    public function generatePdf(ReportCard $reportCard)
+    {
+        $path = $this->pdfService->generate($reportCard);
+        $reportCard->update(['pdf_path' => $path]);
+
+        return response()->json([
+            'message' => 'PDF berhasil dibuat',
+            'pdf_path' => $path,
+            'url' => Storage::url($path),
+        ]);
+    }
+
+    /**
+     * Download PDF report card
+     */
+    public function downloadPdf(ReportCard $reportCard)
+    {
+        if (!$reportCard->pdf_path) {
+            return response()->json(['message' => 'PDF belum dibuat'], 404);
+        }
+
+        return $this->pdfService->stream($reportCard);
+    }
+
+    /**
+     * Approve report card (for Wali Kelas)
+     */
+    public function approve(Request $request, ReportCard $reportCard)
+    {
+        if ($reportCard->status === 'published') {
+            return response()->json(['message' => 'Raport sudah dipublish, tidak dapat diubah'], 422);
+        }
+
+        $reportCard->update([
+            'status' => 'approved',
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+        ]);
+
+        return response()->json($reportCard);
+    }
+
+    /**
+     * Get report cards by student
+     */
+    public function byStudent(Request $request, int $studentId)
+    {
+        $reportCards = ReportCard::with(['items.subject', 'semester'])
+            ->where('student_id', $studentId)
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json($reportCards);
     }
 }

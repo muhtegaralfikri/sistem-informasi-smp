@@ -13,6 +13,11 @@ class StudentController extends Controller
     {
         $query = Student::with(['classRoom', 'guardian']);
 
+        // Filter by class_id
+        if ($request->has('class_id')) {
+            $query->where('class_id', $request->class_id);
+        }
+
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -25,6 +30,14 @@ class StudentController extends Controller
             });
         }
 
+        // Handle JSON API requests
+        if ($request->wantsJson()) {
+            return response()->json(
+                $query->orderBy('full_name')->limit(200)->get()
+            );
+        }
+
+        // Handle AJAX requests for partial table refresh
         if ($request->ajax()) {
             return view('admin.students.partials.table', [
                 'students' => $query->orderBy('full_name')->paginate(15)->withQueryString(),

@@ -17,6 +17,7 @@ class ReportCard extends Model
         'average_score',
         'remarks',
         'approved_by',
+        'approved_at',
         'pdf_path',
         'published_at',
     ];
@@ -25,6 +26,7 @@ class ReportCard extends Model
     {
         return [
             'published_at' => 'datetime',
+            'approved_at' => 'datetime',
         ];
     }
 
@@ -41,5 +43,10 @@ class ReportCard extends Model
     public function semester()
     {
         return $this->belongsTo(Semester::class);
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }
