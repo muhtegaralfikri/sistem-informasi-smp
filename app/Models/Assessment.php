@@ -35,4 +35,45 @@ class Assessment extends Model
     {
         return $this->hasMany(GradeEntry::class);
     }
+
+    public function semester()
+    {
+        return $this->belongsTo(Semester::class);
+    }
+
+    /**
+     * Validate that adding this weight won't exceed 100
+     */
+    public function validateWeightNotExceed(int $newWeight, ?int $excludeId = null): bool
+    {
+        $query = $this->classSubject->assessments();
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $currentTotal = (int) $query->sum('weight');
+
+        return ($currentTotal + $newWeight) <= 100;
+    }
+
+    /**
+     * Get remaining weight available
+     */
+    public function getRemainingWeightAttribute(): int
+    {
+        return 100 - $this->classSubject->total_weight;
+    }
+
+    /**
+     * Calculate normalized score for a grade entry
+     */
+    public function calculateNormalizedScore(?float $rawScore): ?float
+    {
+        if ($rawScore === null) {
+            return null;
+        }
+
+        return round(($rawScore / $this->max_score) * 100, 2);
+    }
 }

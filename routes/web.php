@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\AdminViewController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ParentPortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportCardController;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +62,8 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     Route::put('assessments/{assessment}', [AssessmentController::class, 'update']);
     Route::patch('assessments/{assessment}', [AssessmentController::class, 'update']);
     Route::post('assessments/{assessment}/grades', [AssessmentController::class, 'gradesUpsert']);
+    Route::get('class-subjects/{classSubject}/assessments', [AssessmentController::class, 'byClassSubject']);
+    Route::get('class-subjects/{classSubject}/final-scores', [AssessmentController::class, 'calculateFinalScores']);
 
     // Raport
     Route::get('report-cards', [ReportCardController::class, 'index']);
@@ -70,6 +73,10 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     Route::patch('report-cards/{reportCard}', [ReportCardController::class, 'update']);
     Route::post('report-cards/{reportCard}/items', [ReportCardController::class, 'itemsUpsert']);
     Route::post('report-cards/{reportCard}/publish', [ReportCardController::class, 'publish']);
+    Route::post('report-cards/{reportCard}/approve', [ReportCardController::class, 'approve']);
+    Route::post('report-cards/{reportCard}/generate-pdf', [ReportCardController::class, 'generatePdf']);
+    Route::get('report-cards/{reportCard}/download', [ReportCardController::class, 'downloadPdf']);
+    Route::get('students/{student}/report-cards', [ReportCardController::class, 'byStudent']);
 });
 
 // Guru: absensi & penilaian (kelas-mapel yang diajar)
@@ -84,6 +91,15 @@ Route::middleware(['auth', 'verified', 'role:Wali Kelas'])->prefix('wali')->name
     Route::get('/dashboard', fn () => view('wali.dashboard'))->name('dashboard');
     Route::get('/report-cards', [AdminViewController::class, 'reportCards'])->name('report-cards.ui');
     Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance.ui');
+});
+
+// Orang Tua: portal orang tua
+Route::middleware(['auth', 'verified', 'role:Orang Tua'])->prefix('parent')->name('parent.')->group(function () {
+    Route::get('/dashboard', [ParentPortalController::class, 'dashboard'])->name('dashboard');
+    Route::get('/students/{student}/attendance', [ParentPortalController::class, 'studentAttendance'])->name('student.attendance');
+    Route::get('/students/{student}/report-cards', [ParentPortalController::class, 'studentReportCards'])->name('student.report-cards');
+    Route::get('/students/{student}/report-cards/{reportCard}/download', [ParentPortalController::class, 'downloadReportCard'])->name('student.report-card.download');
+    Route::get('/announcements', [ParentPortalController::class, 'announcements'])->name('announcements');
 });
 
 require __DIR__.'/auth.php';

@@ -29,4 +29,54 @@ class ClassSubject extends Model
     {
         return $this->belongsTo(Teacher::class);
     }
+
+    public function assessments()
+    {
+        return $this->hasMany(Assessment::class);
+    }
+
+    /**
+     * Get total weight for this class subject
+     */
+    public function getTotalWeightAttribute(): int
+    {
+        return (int) $this->assessments()->sum('weight');
+    }
+
+    /**
+     * Check if total weight equals 100
+     */
+    public function isWeightComplete(): bool
+    {
+        return $this->total_weight === 100;
+    }
+
+    /**
+     * Calculate final score for a student in this subject
+     */
+    public function calculateFinalScore(int $studentId): ?float
+    {
+        $assessments = $this->assessments()->with(['grades' => function ($query) use ($studentId) {
+            $query->where('student_id', $studentId);
+        }])->get();
+
+        if ($assessments->isEmpty()) {
+            return null;
+        }
+
+        $totalWeightedScore = 0;
+        $totalWeight = 0;
+
+        foreach ($assessments as $assessment) {
+            $grade = $assessment->grades->first();
+            if ($grade && $grade->score !== null) {
+                // Normalize score to 100 scale
+                $normalizedScore = ($grade->score / $assessment->max_score) * 100;
+                $totalWeightedScore += $normalizedScore * ($assessment->weight / 100);
+                $totalWeight += $assessment->weight;
+            }
+        }
+
+        return $totalWeight > 0 ? round($totalWeightedScore, 2) : null;
+    }
 }
