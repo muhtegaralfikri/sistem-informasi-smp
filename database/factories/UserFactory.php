@@ -24,8 +24,8 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
-        // Ensure faker is available even if the base factory has not set it yet
-        $faker = $this->faker ?? \fake();
+        // Use faker from the base factory
+        $faker = $this->faker;
 
         $defaultRole = Role::query()->firstOrCreate(
             ['name' => 'Admin TU'],
