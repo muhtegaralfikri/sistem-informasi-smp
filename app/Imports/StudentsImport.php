@@ -24,7 +24,7 @@ class StudentsImport implements ToCollection, WithHeadingRow
                     'gender' => $this->parseGender($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? null),
                     'birth_date' => $this->parseDate($row['tanggal_lahir'] ?? $row['birth_date'] ?? $row['tgl_lahir'] ?? null),
                     'address' => $row['alamat'] ?? $row['address'] ?? null,
-                    'status' => $row['status'] ?? 'active',
+                    'status' => $this->parseStatus($row['status'] ?? null),
                 ]);
             } else {
                 // Create new student
@@ -35,10 +35,24 @@ class StudentsImport implements ToCollection, WithHeadingRow
                     'gender' => $this->parseGender($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? null),
                     'birth_date' => $this->parseDate($row['tanggal_lahir'] ?? $row['birth_date'] ?? $row['tgl_lahir'] ?? null),
                     'address' => $row['alamat'] ?? $row['address'] ?? null,
-                    'status' => $row['status'] ?? 'active',
+                    'status' => $this->parseStatus($row['status'] ?? null),
                 ]);
             }
         }
+    }
+
+    private function parseStatus($value)
+    {
+        if (!$value) return 'active';
+
+        $value = strtolower(trim($value));
+        if (in_array($value, ['aktif', 'active', 'a', '1', 'yes', 'ya'])) {
+            return 'active';
+        }
+        if (in_array($value, ['nonaktif', 'non-aktif', 'inactive', 'i', '0', 'no', 'tidak'])) {
+            return 'inactive';
+        }
+        return 'active';
     }
 
     private function parseGender($value)
