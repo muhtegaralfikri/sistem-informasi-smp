@@ -8,18 +8,18 @@
 </li>
 
 @auth
-    @if(auth()->user()->role?->name === 'Admin TU')
+    @php $roleName = auth()->user()->role?->name; @endphp
+    @if($roleName === 'Admin TU')
     <li>
         <div class="text-xs font-semibold leading-6 text-gray-400 mt-4 mb-2">Administrasi</div>
         <ul role="list" class="-mx-2 space-y-1">
-             <li>
+            <li>
                 <a href="{{ route('admin.panel') }}" class="{{ request()->routeIs('admin.panel') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
                     <svg class="{{ request()->routeIs('admin.panel') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
                     </svg>
                     Panel Admin
                 </a>
-            </li>
             </li>
              <li>
                 <a href="{{ route('admin.students.index') }}" class="{{ request()->routeIs('admin.students.*') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
@@ -51,6 +51,66 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                     </svg>
                     Mata Pelajaran
+                </a>
+            </li>
+        </ul>
+    </li>
+    @elseif($roleName === 'Guru')
+    <li>
+        <div class="text-xs font-semibold leading-6 text-gray-400 mt-4 mb-2">Guru</div>
+        <ul role="list" class="-mx-2 space-y-1">
+            <li>
+                <a href="{{ route('guru.dashboard') }}" class="{{ request()->is('guru/dashboard') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('guru/dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5h16.5M3.75 9h16.5M3.75 13.5h16.5M3.75 18h7.5" />
+                    </svg>
+                    Dashboard Guru
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('guru.attendance.ui') }}" class="{{ request()->is('guru/attendance') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('guru/attendance') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5M3.75 9.75h16.5m-16.5 4.5H12m-8.25 4.5h8.25" />
+                    </svg>
+                    Absensi
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('guru.assessments.ui') }}" class="{{ request()->is('guru/assessments') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('guru/assessments') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-6-6h12" />
+                    </svg>
+                    Penilaian
+                </a>
+            </li>
+        </ul>
+    </li>
+    @elseif($roleName === 'Wali Kelas')
+    <li>
+        <div class="text-xs font-semibold leading-6 text-gray-400 mt-4 mb-2">Wali Kelas</div>
+        <ul role="list" class="-mx-2 space-y-1">
+            <li>
+                <a href="{{ route('wali.dashboard') }}" class="{{ request()->is('wali/dashboard') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('wali/dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-6-6h12" />
+                    </svg>
+                    Dashboard Wali
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('wali.attendance.ui') }}" class="{{ request()->is('wali/attendance') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('wali/attendance') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5M3.75 9.75h16.5m-16.5 4.5H12m-8.25 4.5h8.25" />
+                    </svg>
+                    Absensi
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('wali.report-cards.ui') }}" class="{{ request()->is('wali/report-cards') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <svg class="{{ request()->is('wali/report-cards') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600' }} h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 7.5l3 3 6-6M4.5 6.75h7.5M4.5 12h4.5M4.5 17.25H9" />
+                    </svg>
+                    Raport Kelas
                 </a>
             </li>
         </ul>

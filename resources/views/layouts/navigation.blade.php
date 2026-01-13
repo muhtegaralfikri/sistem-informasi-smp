@@ -15,9 +15,30 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    @if(Auth::user()?->role?->name === 'Admin TU')
+                    @php $roleName = Auth::user()?->role?->name; @endphp
+                    @if($roleName === 'Admin TU')
                         <x-nav-link :href="route('admin.panel')" :active="request()->is('admin/panel')">
                             Admin Panel
+                        </x-nav-link>
+                    @elseif($roleName === 'Guru')
+                        <x-nav-link :href="route('guru.dashboard')" :active="request()->is('guru/dashboard')">
+                            Dashboard Guru
+                        </x-nav-link>
+                        <x-nav-link :href="route('guru.attendance.ui')" :active="request()->is('guru/attendance')">
+                            Absensi
+                        </x-nav-link>
+                        <x-nav-link :href="route('guru.assessments.ui')" :active="request()->is('guru/assessments')">
+                            Penilaian
+                        </x-nav-link>
+                    @elseif($roleName === 'Wali Kelas')
+                        <x-nav-link :href="route('wali.dashboard')" :active="request()->is('wali/dashboard')">
+                            Dashboard Wali
+                        </x-nav-link>
+                        <x-nav-link :href="route('wali.attendance.ui')" :active="request()->is('wali/attendance')">
+                            Absensi
+                        </x-nav-link>
+                        <x-nav-link :href="route('wali.report-cards.ui')" :active="request()->is('wali/report-cards')">
+                            Raport Kelas
                         </x-nav-link>
                     @endif
                 </div>
@@ -75,6 +96,32 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @php $roleName = Auth::user()?->role?->name; @endphp
+            @if($roleName === 'Admin TU')
+                <x-responsive-nav-link :href="route('admin.panel')" :active="request()->is('admin/panel')">
+                    Admin Panel
+                </x-responsive-nav-link>
+            @elseif($roleName === 'Guru')
+                <x-responsive-nav-link :href="route('guru.dashboard')" :active="request()->is('guru/dashboard')">
+                    Dashboard Guru
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('guru.attendance.ui')" :active="request()->is('guru/attendance')">
+                    Absensi
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('guru.assessments.ui')" :active="request()->is('guru/assessments')">
+                    Penilaian
+                </x-responsive-nav-link>
+            @elseif($roleName === 'Wali Kelas')
+                <x-responsive-nav-link :href="route('wali.dashboard')" :active="request()->is('wali/dashboard')">
+                    Dashboard Wali
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('wali.attendance.ui')" :active="request()->is('wali/attendance')">
+                    Absensi
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('wali.report-cards.ui')" :active="request()->is('wali/report-cards')">
+                    Raport Kelas
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

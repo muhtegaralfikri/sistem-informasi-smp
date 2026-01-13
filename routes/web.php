@@ -40,6 +40,13 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     Route::resource('students', StudentController::class)->except(['create', 'edit']);
     Route::resource('class-subjects', ClassSubjectController::class)->except(['create', 'edit']);
 
+    // Views (frontend-first, backend wiring later)
+    Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance');
+    Route::get('/assessments/ui', [AdminViewController::class, 'assessments'])->name('assessments.ui');
+    Route::get('/report-cards/ui', [AdminViewController::class, 'reportCards'])->name('report-cards.ui');
+    Route::get('/announcements', [AdminViewController::class, 'announcements'])->name('announcements');
+    Route::get('/parent-portal', [AdminViewController::class, 'parentPortalPreview'])->name('parent-portal');
+
     // Absensi
     Route::get('attendance/sheets', [AttendanceController::class, 'sheetsIndex']);
     Route::post('attendance/sheets', [AttendanceController::class, 'sheetsStore']);
@@ -63,6 +70,20 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     Route::patch('report-cards/{reportCard}', [ReportCardController::class, 'update']);
     Route::post('report-cards/{reportCard}/items', [ReportCardController::class, 'itemsUpsert']);
     Route::post('report-cards/{reportCard}/publish', [ReportCardController::class, 'publish']);
+});
+
+// Guru: absensi & penilaian (kelas-mapel yang diajar)
+Route::middleware(['auth', 'verified', 'role:Guru'])->prefix('guru')->name('guru.')->group(function () {
+    Route::get('/dashboard', fn () => view('guru.dashboard'))->name('dashboard');
+    Route::get('/assessments', [AdminViewController::class, 'assessments'])->name('assessments.ui');
+    Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance.ui');
+});
+
+// Wali Kelas: rekap absensi kelasnya, approval raport
+Route::middleware(['auth', 'verified', 'role:Wali Kelas'])->prefix('wali')->name('wali.')->group(function () {
+    Route::get('/dashboard', fn () => view('wali.dashboard'))->name('dashboard');
+    Route::get('/report-cards', [AdminViewController::class, 'reportCards'])->name('report-cards.ui');
+    Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance.ui');
 });
 
 require __DIR__.'/auth.php';
