@@ -1,6 +1,9 @@
-<x-table :headers="['Nama Lengkap', 'NIS / NISN', 'Kelas', 'Status', 'Aksi']">
+<x-table :headers="['', 'Nama Lengkap', 'NIS / NISN', 'Kelas', 'Status', 'Aksi']">
     @forelse($students as $student)
-        <tr>
+        <tr :class="selectedIds.includes({{ $student->id }}) ? 'bg-indigo-50' : ''">
+            <td class="px-6 py-4 whitespace-nowrap">
+                <input type="checkbox" :value="{{ $student->id }}" x-model="selectedIds" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">{{ $student->full_name }}</div>
                 <div class="text-sm text-gray-500">{{ $student->gender == 'male' ? 'Laki-laki' : 'Perempuan' }}</div>

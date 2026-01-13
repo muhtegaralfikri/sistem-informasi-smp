@@ -127,4 +127,24 @@ class StudentController extends Controller
             ], 500);
         }
     }
+
+    public function bulkUpdateClass(Request $request)
+    {
+        $data = $request->validate([
+            'student_ids' => ['required', 'array'],
+            'student_ids.*' => ['exists:students,id'],
+            'class_id' => ['nullable', 'exists:classes,id'],
+        ]);
+
+        try {
+            \App\Models\Student::whereIn('id', $data['student_ids'])
+                ->update(['class_id' => $data['class_id']]);
+
+            return response()->json([
+                'message' => 'Berhasil memindahkan ' . count($data['student_ids']) . ' siswa.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal mengupdate kelas: ' . $e->getMessage()], 500);
+        }
+    }
 }
