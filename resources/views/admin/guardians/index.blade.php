@@ -256,7 +256,11 @@
                 async exportData() {
                     try {
                         const res = await fetch("{{ route('admin.guardians.export') }}");
-                        if (!res.ok) throw new Error('Gagal mengekspor data');
+                        if (!res.ok) {
+                            const text = await res.text();
+                            console.error('Export failed:', res.status, text);
+                            throw new Error('Gagal mengekspor data: ' + res.status + ' ' + text);
+                        }
 
                         const blob = await res.blob();
                         const url = window.URL.createObjectURL(blob);
@@ -268,7 +272,8 @@
                         window.URL.revokeObjectURL(url);
                         document.body.removeChild(a);
                     } catch (e) {
-                        alert('Gagal mengekspor data');
+                        console.error('Export error:', e);
+                        alert('Gagal mengekspor data: ' + e.message);
                     }
                 },
 

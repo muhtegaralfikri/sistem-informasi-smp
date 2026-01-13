@@ -33,7 +33,18 @@
                 <div class="flex items-center gap-4">
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition">Dashboard</a>
+                            @php $roleName = Auth::user()?->role?->name; @endphp
+                            @if($roleName === 'Admin TU')
+                                <a href="{{ route('admin.panel') }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition">Dashboard</a>
+                            @elseif($roleName === 'Guru')
+                                <a href="{{ route('guru.dashboard') }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition">Dashboard</a>
+                            @elseif($roleName === 'Wali Kelas')
+                                <a href="{{ route('wali.dashboard') }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition">Dashboard</a>
+                            @elseif($roleName === 'Kepala Sekolah')
+                                <a href="{{ route('kepsek.dashboard') }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition">Dashboard</a>
+                            @elseif($roleName === 'Orang Tua')
+                                <a href="{{ route('parent.dashboard') }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition">Dashboard</a>
+                            @endif
                         @else
                             <a href="{{ route('login') }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition">Masuk</a>
                             @if (Route::has('register'))
@@ -61,9 +72,28 @@
             <div class="mt-8 max-w-md mx-auto sm:flex sm:justify-center md:mt-10">
                 <div class="rounded-md shadow">
                     @auth
-                        <a href="{{ url('/dashboard') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition">
-                            Ke Dashboard
-                        </a>
+                        @php $roleName = Auth::user()?->role?->name; @endphp
+                        @if($roleName === 'Admin TU')
+                            <a href="{{ route('admin.panel') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition">
+                                Ke Dashboard
+                            </a>
+                        @elseif($roleName === 'Guru')
+                            <a href="{{ route('guru.dashboard') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition">
+                                Ke Dashboard
+                            </a>
+                        @elseif($roleName === 'Wali Kelas')
+                            <a href="{{ route('wali.dashboard') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition">
+                                Ke Dashboard
+                            </a>
+                        @elseif($roleName === 'Kepala Sekolah')
+                            <a href="{{ route('kepsek.dashboard') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition">
+                                Ke Dashboard
+                            </a>
+                        @elseif($roleName === 'Orang Tua')
+                            <a href="{{ route('parent.dashboard') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition">
+                                Ke Dashboard
+                            </a>
+                        @endif
                     @else
                         <a href="{{ route('login') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition">
                             Mulai Sekarang
