@@ -20,10 +20,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -32,6 +28,17 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/panel', [AdminViewController::class, 'dashboard'])->name('panel');
+
+    // Import/Export routes MUST be defined BEFORE resource routes
+    // to prevent {id} parameter from catching 'export' and 'import' as IDs
+    Route::post('students/import', [StudentController::class, 'import'])->name('students.import');
+    Route::get('students/export', [StudentController::class, 'export'])->name('students.export');
+    Route::post('teachers/import', [TeacherController::class, 'import'])->name('teachers.import');
+    Route::get('teachers/export', [TeacherController::class, 'export'])->name('teachers.export');
+    Route::post('guardians/import', [GuardianController::class, 'import'])->name('guardians.import');
+    Route::get('guardians/export', [GuardianController::class, 'export'])->name('guardians.export');
+
+    // Resource routes (with {id} wildcards) AFTER specific routes
     Route::resource('academic-years', AcademicYearController::class)->except(['create', 'edit']);
     Route::resource('semesters', SemesterController::class)->except(['create', 'edit']);
     Route::resource('subjects', SubjectController::class)->except(['create', 'edit']);
@@ -91,6 +98,12 @@ Route::middleware(['auth', 'verified', 'role:Wali Kelas'])->prefix('wali')->name
     Route::get('/dashboard', fn () => view('wali.dashboard'))->name('dashboard');
     Route::get('/report-cards', [AdminViewController::class, 'reportCards'])->name('report-cards.ui');
     Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance.ui');
+});
+
+// Kepala Sekolah: dashboard & reports
+Route::middleware(['auth', 'verified', 'role:Kepala Sekolah'])->prefix('kepsek')->name('kepsek.')->group(function () {
+    Route::get('/dashboard', [AdminViewController::class, 'dashboard'])->name('dashboard');
+    Route::get('/report-cards', [AdminViewController::class, 'reportCards'])->name('report-cards');
 });
 
 // Orang Tua: portal orang tua

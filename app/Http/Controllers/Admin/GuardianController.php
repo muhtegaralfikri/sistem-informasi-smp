@@ -3,15 +3,42 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Exports\GuardiansExport;
+use App\Imports\GuardiansImport;
 use App\Models\Guardian;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class GuardianController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Guardian::with('user')->orderBy('full_name')->get());
+        $query = Guardian::with(['user', 'students']);
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json($query->orderBy('full_name')->limit(200)->get());
+        }
+
+        if ($request->ajax()) {
+            return view('admin.guardians.partials.table', [
+                'guardians' => $query->orderBy('full_name')->paginate(15)->withQueryString(),
+            ]);
+        }
+
+        return view('admin.guardians.index', [
+            'guardians' => $query->orderBy('full_name')->paginate(15)->withQueryString(),
+        ]);
     }
 
     public function store(Request $request)
@@ -54,5 +81,29 @@ class GuardianController extends Controller
         $guardian->delete();
 
         return response()->noContent();
+    }
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new GuardiansExport, 'wali_' . date('Y-m-d') . '.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+        ]);
+
+        try {
+            Excel::import(new GuardiansImport, $request->file('file'));
+
+            return response()->json([
+                'message' => 'Data wali berhasil diimport',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal mengimport data: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

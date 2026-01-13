@@ -160,9 +160,9 @@
                     this.loading = true;
                     this.errors = {};
                     
-                    const url = this.isEdit 
-                        ? '{{ route('admin.subjects.update', ':id') }}'.replace(':id', this.currentId)
-                        : '{{ route('admin.subjects.store') }}';
+                    const url = this.isEdit
+                        ? "{{ route('admin.subjects.update', ':id') }}".replace(':id', this.currentId)
+                        : "{{ route('admin.subjects.store') }}";
                     
                     const method = this.isEdit ? 'PUT' : 'POST';
 
@@ -172,7 +172,7 @@
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
                             },
                             body: JSON.stringify(this.form)
                         });
@@ -203,10 +203,10 @@
                     if (!confirm('Apakah Anda yakin ingin menghapus mata pelajaran ini?')) return;
 
                     try {
-                        const res = await fetch('{{ route('admin.subjects.destroy', ':id') }}'.replace(':id', id), {
+                        const res = await fetch("{{ route('admin.subjects.destroy', ':id') }}".replace(':id', id), {
                             method: 'DELETE',
                             headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}",
                                 'Accept': 'application/json'
                             }
                         });

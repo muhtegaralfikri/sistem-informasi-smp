@@ -310,9 +310,9 @@
                     this.errors.year = '';
                     this.loading = true;
                     
-                    const url = this.isYearEdit 
-                        ? '{{ route('admin.academic-years.update', ':id') }}'.replace(':id', this.yearId)
-                        : '{{ route('admin.academic-years.store') }}';
+                    const url = this.isYearEdit
+                        ? "{{ route('admin.academic-years.update', ':id') }}".replace(':id', this.yearId)
+                        : "{{ route('admin.academic-years.store') }}";
 
                     const method = this.isYearEdit ? 'PUT' : 'POST';
                     
@@ -363,9 +363,9 @@
                     this.errors.semester = '';
                     this.loading = true;
                     
-                    const url = this.isSemEdit 
-                        ? '{{ route('admin.semesters.update', ':id') }}'.replace(':id', this.semId)
-                        : '{{ route('admin.semesters.store') }}';
+                    const url = this.isSemEdit
+                        ? "{{ route('admin.semesters.update', ':id') }}".replace(':id', this.semId)
+                        : "{{ route('admin.semesters.store') }}";
 
                     const method = this.isSemEdit ? 'PUT' : 'POST';
 
