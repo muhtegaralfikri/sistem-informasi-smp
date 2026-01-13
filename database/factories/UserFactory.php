@@ -30,9 +30,9 @@ class UserFactory extends Factory
         );
 
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'phone' => fake()->phoneNumber(),
+            'name' => $this->faker->name(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'phone' => $this->faker->phoneNumber(),
             'role_id' => $defaultRole->id,
             'status' => 'active',
             'email_verified_at' => now(),
