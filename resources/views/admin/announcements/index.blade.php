@@ -1,11 +1,7 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-900 leading-tight">
-            {{ __('Pengumuman Sekolah') }}
-        </h2>
-    </x-slot>
 
-    <div class="py-12" x-data="announcementPage({
+
+    <div x-data="announcementPage({
         classes: @json($classes->map(fn($c) => ['id' => $c->id, 'name' => $c->name])),
         announcements: @json($announcements),
     })">

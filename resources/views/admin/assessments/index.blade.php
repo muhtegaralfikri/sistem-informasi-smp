@@ -1,11 +1,7 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-900 leading-tight">
-            {{ __('Penilaian & Rekap Nilai') }}
-        </h2>
-    </x-slot>
 
-    <div class="py-12" x-data="assessmentsPage()">
+
+    <div x-data="assessmentsPage()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
             <!-- Weight Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

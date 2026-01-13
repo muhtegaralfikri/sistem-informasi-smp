@@ -1,11 +1,7 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-900 leading-tight">
-            {{ __('Raport Digital') }}
-        </h2>
-    </x-slot>
 
-    <div class="py-12" x-data="reportCardsPage({
+
+    <div x-data="reportCardsPage({
         reports: @json($reports),
         classRecap: @json($classRecap),
     })">

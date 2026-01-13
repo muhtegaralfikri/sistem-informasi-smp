@@ -1,9 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-900 leading-tight">
-            {{ __('Admin Panel') }}
-        </h2>
-    </x-slot>
+
 
     <div x-data="adminDashboard()">
         <div class="max-w-7xl mx-auto space-y-8">

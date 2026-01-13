@@ -1,11 +1,7 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-900 leading-tight">
-            {{ __('Absensi Kelas & Mapel') }}
-        </h2>
-    </x-slot>
 
-    <div class="py-12" x-data="attendancePage({
+
+    <div x-data="attendancePage({
         classes: {{ Illuminate\Support\Js::from($classes->map(fn($c) => ['id' => $c->id, 'name' => $c->name])) }},
         subjects: {{ Illuminate\Support\Js::from($subjects->map(fn($s) => ['id' => $s->id, 'name' => $s->name])) }},
         teachers: {{ Illuminate\Support\Js::from($teachers->map(fn($t) => ['id' => $t->id, 'name' => $t->full_name])) }},

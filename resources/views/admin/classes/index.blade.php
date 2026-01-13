@@ -1,11 +1,7 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-900 leading-tight">
-            {{ __('Data Kelas') }}
-        </h2>
-    </x-slot>
 
-    <div class="py-12" x-data="classPage()">
+
+    <div x-data="classPage()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <x-card>
                 <div class="flex justify-between items-center mb-6">
