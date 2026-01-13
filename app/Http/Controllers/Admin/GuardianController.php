@@ -95,6 +95,7 @@ class GuardianController extends Controller
         ]);
 
         try {
+            set_time_limit(300); // Increase timeout for bulk import with password hashing
             Excel::import(new GuardiansImport, $request->file('file'));
 
             return response()->json([
