@@ -18,6 +18,7 @@ class GuardiansImport implements ToCollection, WithHeadingRow, WithChunkReading
     {
         return 20; // Process 20 rows at a time
     }
+
     public function collection(Collection $rows)
     {
         $parentRole = Role::where('name', 'Orang Tua')->first();
@@ -43,7 +44,7 @@ class GuardiansImport implements ToCollection, WithHeadingRow, WithChunkReading
                 // Create new guardian with user account
                 DB::transaction(function () use ($row, $phone, $email, $parentRole) {
                     $fullName = $row['nama'] ?? $row['full_name'] ?? $row['nama_lengkap'] ?? 'Orang Tua';
-                    
+
                     // Create User account
                     $user = User::create([
                         'name' => $fullName,
