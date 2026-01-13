@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AcademicYearController;
+use App\Http\Controllers\Admin\ClassScheduleController;
 use App\Http\Controllers\Admin\ClassSubjectController;
 use App\Http\Controllers\Admin\GuardianController;
 use App\Http\Controllers\Admin\SchoolClassController;
@@ -55,6 +56,19 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     Route::get('/report-cards/ui', [AdminViewController::class, 'reportCards'])->name('report-cards.ui');
     Route::get('/announcements', [AdminViewController::class, 'announcements'])->name('announcements');
     Route::get('/parent-portal', [AdminViewController::class, 'parentPortalPreview'])->name('parent-portal');
+
+    Route::get('/parent-portal', [AdminViewController::class, 'parentPortalPreview'])->name('parent-portal');
+
+    // Atur Mapel Kelas (Class-Subject Assignment)
+    Route::get('class-subjects/class/{classId}', [ClassSubjectController::class, 'getByClass']);
+    Route::post('class-subjects', [ClassSubjectController::class, 'store'])->name('class-subjects.store');
+    Route::delete('class-subjects/{classSubject}', [ClassSubjectController::class, 'destroy'])->name('class-subjects.destroy');
+
+    // Jadwal Pelajaran
+    Route::get('schedules', [ClassScheduleController::class, 'index'])->name('schedules.index');
+    Route::get('schedules/class/{classId}', [ClassScheduleController::class, 'getSchedules']);
+    Route::post('schedules', [ClassScheduleController::class, 'store'])->name('schedules.store');
+    Route::delete('schedules/{schedule}', [ClassScheduleController::class, 'destroy'])->name('schedules.destroy');
 
     // Absensi
     Route::get('attendance/sheets', [AttendanceController::class, 'sheetsIndex']);

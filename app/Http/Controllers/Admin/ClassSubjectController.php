@@ -16,6 +16,16 @@ class ClassSubjectController extends Controller
         );
     }
 
+    public function getByClass($classId)
+    {
+        return response()->json(
+            ClassSubject::with(['subject', 'teacher'])
+                ->where('class_id', $classId)
+                ->orderByDesc('id')
+                ->get()
+        );
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
