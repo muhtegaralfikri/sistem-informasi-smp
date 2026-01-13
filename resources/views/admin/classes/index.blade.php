@@ -206,9 +206,9 @@
                     this.loading = true;
                     this.errors = {};
                     
-                    const url = this.isEdit 
-                        ? '{{ route('admin.classes.update', ':id') }}'.replace(':id', this.currentId)
-                        : '{{ route('admin.classes.store') }}';
+                    const url = this.isEdit
+                        ? "{{ route('admin.classes.update', ':id') }}".replace(':id', this.currentId)
+                        : "{{ route('admin.classes.store') }}";
                     
                     const method = this.isEdit ? 'PUT' : 'POST';
 
@@ -218,7 +218,7 @@
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
                             },
                             body: JSON.stringify(this.form)
                         });
@@ -249,10 +249,10 @@
                     if (!confirm('Apakah Anda yakin ingin menghapus kelas ini?')) return;
 
                     try {
-                        const res = await fetch('{{ route('admin.classes.destroy', ':id') }}'.replace(':id', id), {
+                        const res = await fetch("{{ route('admin.classes.destroy', ':id') }}".replace(':id', id), {
                             method: 'DELETE',
                             headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}",
                                 'Accept': 'application/json'
                             }
                         });

@@ -8,11 +8,21 @@
     <div class="py-12" x-data="teacherPage()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <x-card>
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                     <h3 class="text-lg font-medium text-gray-900">Daftar Guru</h3>
-                    <button @click="openModal('create')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        + Tambah Guru
-                    </button>
+
+                    <div class="flex items-center gap-4 w-full sm:w-auto">
+                        <button @click="openModal('create')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 whitespace-nowrap">
+                            + Tambah Guru
+                        </button>
+                        <button @click="exportData" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none whitespace-nowrap">
+                            Export Excel
+                        </button>
+                        <button @click="$refs.importInput.click()" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none whitespace-nowrap">
+                            Import Excel
+                        </button>
+                        <input type="file" x-ref="importInput" @change="importData" accept=".xlsx,.xls,.csv" class="hidden">
+                    </div>
                 </div>
 
                 <x-table :headers="['Nama Lengkap', 'NIP', 'Email / Kontak', 'Status', 'Aksi']">
@@ -151,9 +161,9 @@
                     this.loading = true;
                     this.errors = {};
                     
-                    const url = this.isEdit 
-                        ? '{{ route('admin.teachers.update', ':id') }}'.replace(':id', this.currentId)
-                        : '{{ route('admin.teachers.store') }}';
+                    const url = this.isEdit
+                        ? "{{ route('admin.teachers.update', ':id') }}".replace(':id', this.currentId)
+                        : "{{ route('admin.teachers.store') }}";
                     
                     const method = this.isEdit ? 'PUT' : 'POST';
 
@@ -163,7 +173,7 @@
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
                             },
                             body: JSON.stringify(this.form)
                         });
@@ -194,10 +204,10 @@
                     if (!confirm('Apakah Anda yakin ingin menghapus data guru ini? Akun user terkait mungkin tidak terhapus otomatis (tergantung sistem).')) return;
 
                     try {
-                        const res = await fetch('{{ route('admin.teachers.destroy', ':id') }}'.replace(':id', id), {
+                        const res = await fetch("{{ route('admin.teachers.destroy', ':id') }}".replace(':id', id), {
                             method: 'DELETE',
                             headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}",
                                 'Accept': 'application/json'
                             }
                         });
@@ -210,6 +220,55 @@
                         }
                     } catch(e) {
                          alert('Terjadi kesalahan jaringan');
+                    }
+                },
+
+                async exportData() {
+                    try {
+                        const res = await fetch("{{ route('admin.teachers.export') }}");
+                        if (!res.ok) throw new Error('Gagal mengekspor data');
+
+                        const blob = await res.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'guru_' + new Date().toISOString().slice(0,10) + '.xlsx';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    } catch (e) {
+                        alert('Gagal mengekspor data');
+                    }
+                },
+
+                async importData(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    try {
+                        const res = await fetch("{{ route('admin.teachers.import') }}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                                'Accept': 'application/json',
+                            },
+                            body: formData,
+                        });
+
+                        const data = await res.json();
+                        if (!res.ok) {
+                            alert(data.message || 'Gagal mengimport data');
+                            return;
+                        }
+
+                        alert('Data guru berhasil diimport');
+                        window.location.reload();
+                    } catch (e) {
+                        alert('Gagal mengimport data');
                     }
                 }
             }

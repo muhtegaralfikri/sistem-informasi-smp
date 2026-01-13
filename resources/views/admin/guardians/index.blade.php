@@ -31,6 +31,13 @@
                         <button @click="openModal('create')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 whitespace-nowrap">
                             + Tambah Wali
                         </button>
+                        <button @click="exportData" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none whitespace-nowrap">
+                            Export Excel
+                        </button>
+                        <button @click="$refs.importInput.click()" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none whitespace-nowrap">
+                            Import Excel
+                        </button>
+                        <input type="file" x-ref="importInput" @change="importData" accept=".xlsx,.xls,.csv" class="hidden">
                     </div>
                 </div>
 
@@ -117,7 +124,7 @@
             return {
                 isEdit: false,
                 currentId: null,
-                searchQuery: '{{ request('search') }}',
+                searchQuery: "{{ request('search') }}",
                 loadingSearch: false,
                 form: {
                     full_name: '',
@@ -130,7 +137,7 @@
                 async performSearch() {
                     this.loadingSearch = true;
                     try {
-                        const res = await fetch('{{ route('admin.guardians.index') }}?search=' + encodeURIComponent(this.searchQuery), {
+                        const res = await fetch("{{ route('admin.guardians.index') }}?search=" + encodeURIComponent(this.searchQuery), {
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest'
                             }
@@ -185,8 +192,8 @@
                     this.errors = {};
 
                     const url = this.isEdit
-                        ? '{{ route('admin.guardians.update', ':id') }}'.replace(':id', this.currentId)
-                        : '{{ route('admin.guardians.store') }}';
+                        ? "{{ route('admin.guardians.update', ':id') }}".replace(':id', this.currentId)
+                        : "{{ route('admin.guardians.store') }}";
 
                     const method = this.isEdit ? 'PUT' : 'POST';
 
@@ -196,7 +203,7 @@
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
                             },
                             body: JSON.stringify(this.form)
                         });
@@ -227,10 +234,10 @@
                     if (!confirm('Apakah Anda yakin ingin menghapus data wali ini?')) return;
 
                     try {
-                        const res = await fetch('{{ route('admin.guardians.destroy', ':id') }}'.replace(':id', id), {
+                        const res = await fetch("{{ route('admin.guardians.destroy', ':id') }}".replace(':id', id), {
                             method: 'DELETE',
                             headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}",
                                 'Accept': 'application/json'
                             }
                         });
@@ -243,6 +250,55 @@
                         }
                     } catch(e) {
                         alert('Terjadi kesalahan jaringan');
+                    }
+                },
+
+                async exportData() {
+                    try {
+                        const res = await fetch("{{ route('admin.guardians.export') }}");
+                        if (!res.ok) throw new Error('Gagal mengekspor data');
+
+                        const blob = await res.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'wali_' + new Date().toISOString().slice(0,10) + '.xlsx';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    } catch (e) {
+                        alert('Gagal mengekspor data');
+                    }
+                },
+
+                async importData(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    try {
+                        const res = await fetch("{{ route('admin.guardians.import') }}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                                'Accept': 'application/json',
+                            },
+                            body: formData,
+                        });
+
+                        const data = await res.json();
+                        if (!res.ok) {
+                            alert(data.message || 'Gagal mengimport data');
+                            return;
+                        }
+
+                        alert('Data wali berhasil diimport');
+                        window.location.reload();
+                    } catch (e) {
+                        alert('Gagal mengimport data');
                     }
                 }
             }

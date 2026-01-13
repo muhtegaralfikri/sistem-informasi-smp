@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Exports\GuardiansExport;
+use App\Imports\GuardiansImport;
 use App\Models\Guardian;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class GuardianController extends Controller
 {
@@ -77,5 +81,29 @@ class GuardianController extends Controller
         $guardian->delete();
 
         return response()->noContent();
+    }
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new GuardiansExport, 'wali_' . date('Y-m-d') . '.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+        ]);
+
+        try {
+            Excel::import(new GuardiansImport, $request->file('file'));
+
+            return response()->json([
+                'message' => 'Data wali berhasil diimport',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal mengimport data: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

@@ -41,6 +41,14 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     Route::resource('students', StudentController::class)->except(['create', 'edit']);
     Route::resource('class-subjects', ClassSubjectController::class)->except(['create', 'edit']);
 
+    // Import/Export
+    Route::post('students/import', [StudentController::class, 'import'])->name('students.import');
+    Route::get('students/export', [StudentController::class, 'export'])->name('students.export');
+    Route::post('teachers/import', [TeacherController::class, 'import'])->name('teachers.import');
+    Route::get('teachers/export', [TeacherController::class, 'export'])->name('teachers.export');
+    Route::post('guardians/import', [GuardianController::class, 'import'])->name('guardians.import');
+    Route::get('guardians/export', [GuardianController::class, 'export'])->name('guardians.export');
+
     // Views (frontend-first, backend wiring later)
     Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance');
     Route::get('/assessments/ui', [AdminViewController::class, 'assessments'])->name('assessments.ui');

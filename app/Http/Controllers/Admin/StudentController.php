@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Exports\StudentsExport;
+use App\Imports\StudentsImport;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class StudentController extends Controller
 {
@@ -98,5 +102,29 @@ class StudentController extends Controller
         $student->delete();
 
         return response()->noContent();
+    }
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new StudentsExport, 'siswa_' . date('Y-m-d') . '.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+        ]);
+
+        try {
+            Excel::import(new StudentsImport, $request->file('file'));
+
+            return response()->json([
+                'message' => 'Data siswa berhasil diimport',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal mengimport data: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
