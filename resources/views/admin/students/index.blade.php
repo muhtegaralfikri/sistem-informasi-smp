@@ -37,11 +37,53 @@
                     </div>
                 </div>
 
+                <!-- Bulk Action Bar -->
+                <div x-show="selectedIds.length > 0" x-transition class="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-4 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-indigo-700" x-text="selectedIds.length + ' siswa dipilih'"></span>
+                        <button @click="selectedIds = []" class="text-xs text-indigo-500 hover:text-indigo-700 underline">Batalkan</button>
+                    </div>
+                    <button @click="openBulkModal" class="px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
+                        Pindahkan Kelas
+                    </button>
+                </div>
+
                 <div id="student-list">
                     @include('admin.students.partials.table')
                 </div>
             </x-card>
         </div>
+
+        <!-- Bulk Class Modal -->
+        <x-modal name="bulk-class-modal" focusable>
+            <form @submit.prevent="submitBulkClass" class="p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Pindahkan Siswa (Bulk)</h2>
+                <p class="text-sm text-gray-600 mb-4">
+                    Anda akan memindahkan <span class="font-bold" x-text="selectedIds.length"></span> siswa ke kelas baru.
+                </p>
+                
+                <div class="mb-6">
+                    <x-input-label value="Pilih Kelas Tujuan" />
+                    <select x-model="bulkClassId" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                        <option value="">-- Pilih Kelas --</option>
+                        <option value="">(Tanpa Kelas / Lepas Kelas)</option>
+                        @foreach($classes as $class)
+                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button type="button" x-on:click="$dispatch('close')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        Batal
+                    </button>
+                    <x-primary-button ::disabled="loading">
+                        <span x-show="!loading">Simpan</span>
+                        <span x-show="loading">Menyimpan...</span>
+                    </x-primary-button>
+                </div>
+            </form>
+        </x-modal>
 
         <!-- Student Form Modal (Create/Edit) -->
         <x-modal name="student-modal" focusable>
@@ -173,6 +215,8 @@
                 currentId: null,
                 searchQuery: "{{ request('search') }}",
                 loadingSearch: false,
+                selectedIds: [],
+                bulkClassId: '',
                 form: {
                     full_name: '',
                     nis: '',
@@ -375,6 +419,47 @@
                         window.location.reload();
                     } catch (e) {
                         alert('Gagal mengimport data');
+                    }
+                },
+
+                openBulkModal() {
+                    this.bulkClassId = '';
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'bulk-class-modal' }));
+                },
+
+                async submitBulkClass() {
+                    if (!confirm('Yakin ingin memindahkan siswa terpilih?')) return;
+                    
+                    this.loading = true;
+                    try {
+                        const res = await fetch("{{ route('admin.students.bulk-class-update') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({
+                                student_ids: this.selectedIds,
+                                class_id: this.bulkClassId
+                            })
+                        });
+
+                        const data = await res.json();
+                        
+                        if (!res.ok) {
+                            alert(data.message || 'Gagal mengupdate kelas');
+                            return;
+                        }
+
+                        alert(data.message);
+                        this.selectedIds = [];
+                        window.location.reload();
+                    } catch (e) {
+                        console.error(e);
+                        alert('Terjadi kesalahan jaringan');
+                    } finally {
+                        this.loading = false;
                     }
                 }
             }

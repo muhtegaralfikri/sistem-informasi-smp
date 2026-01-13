@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     // Import/Export routes MUST be defined BEFORE resource routes
     // to prevent {id} parameter from catching 'export' and 'import' as IDs
     Route::post('students/import', [StudentController::class, 'import'])->name('students.import');
+    Route::post('students/bulk-class-update', [StudentController::class, 'bulkUpdateClass'])->name('students.bulk-class-update');
     Route::get('students/export', [StudentController::class, 'export'])->name('students.export');
     Route::post('teachers/import', [TeacherController::class, 'import'])->name('teachers.import');
     Route::get('teachers/export', [TeacherController::class, 'export'])->name('teachers.export');
