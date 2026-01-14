@@ -37,12 +37,34 @@ class AdminViewController extends Controller
     {
         [$classes, $subjects, $teachers, $students, $sheets] = $this->attendanceScopedData();
 
+        // Pre-map sheets to avoid multi-line closure issue in Blade
+        $sheetsData = $sheets->map(fn($s) => [
+            'id' => $s->id,
+            'class' => $s->classRoom->name ?? '-',
+            'class_id' => $s->class_id,
+            'subject' => $s->subject->name ?? '-',
+            'teacher' => $s->teacher->full_name ?? '-',
+            'date' => optional($s->date)->format('Y-m-d'),
+            'session' => $s->session,
+            'locked' => !is_null($s->locked_at),
+        ]);
+
+        // Determine API base URL based on role
+        $role = Auth::user()?->role?->name;
+        $apiBaseUrl = match ($role) {
+            'Guru' => '/guru',
+            'Wali Kelas' => '/wali',
+            default => '/admin',
+        };
+
         return view('admin.attendance.index', [
             'classes' => $classes,
             'subjects' => $subjects,
             'teachers' => $teachers,
             'students' => $students,
             'sheets' => $sheets,
+            'sheetsData' => $sheetsData,
+            'apiBaseUrl' => $apiBaseUrl,
         ]);
     }
 

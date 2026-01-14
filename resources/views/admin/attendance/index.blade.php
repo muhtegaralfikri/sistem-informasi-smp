@@ -6,17 +6,8 @@
         subjects: {{ Illuminate\Support\Js::from($subjects->map(fn($s) => ['id' => $s->id, 'name' => $s->name])) }},
         teachers: {{ Illuminate\Support\Js::from($teachers->map(fn($t) => ['id' => $t->id, 'name' => $t->full_name])) }},
         students: {{ Illuminate\Support\Js::from($students->map(fn($st) => ['id' => $st->id, 'name' => $st->full_name, 'nis' => $st->nis])) }},
-        sheets: {{ Illuminate\Support\Js::from($sheets->map(function ($s) {
-            return [
-                'id' => $s->id,
-                'class' => $s->classRoom->name ?? '-',
-                'subject' => $s->subject->name ?? '-',
-                'teacher' => $s->teacher->full_name ?? '-',
-                'date' => optional($s->date)->format('Y-m-d'),
-                'session' => $s->session,
-                'locked' => !is_null($s->locked_at),
-            ];
-        })) },
+        sheets: {{ Illuminate\Support\Js::from($sheetsData) }},
+        apiBaseUrl: '{{ $apiBaseUrl }}',
     })">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
             <!-- Summary Cards -->
@@ -112,26 +103,31 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <template x-for="student in students" :key="student.id">
                                     <tr>
-                                        <td class="px-4 py-3">
-                                            <div class="text-sm font-medium text-gray-900" x-text="student.name"></div>
-                                            <div class="text-xs text-gray-500" x-text="student.nis"></div>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <div class="flex justify-center gap-3">
-                                                <template x-for="state in ['hadir','izin','sakit','alfa']" :key="state">
-                                                    <label class="flex items-center gap-1 cursor-pointer">
-                                                        <input type="radio"
-                                                               :name="`status-${student.id}`"
-                                                               :value="state"
-                                                               class="text-indigo-600 border-gray-300"
-                                                               :checked="getRecordStatus(student.id) === state"
-                                                               :disabled="activeSheet.locked"
-                                                               @change="updateRecordStatus(student.id, state)">
-                                                        <span class="text-xs text-gray-700 capitalize" x-text="state"></span>
-                                                    </label>
-                                                </template>
-                                            </div>
-                                        </td>
+                                    <td class="px-4 py-3">
+                                        <div class="text-sm font-medium text-gray-900" x-text="student.full_name || student.name"></div>
+                                        <div class="text-xs text-gray-500" x-text="student.nis || student.nisn"></div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <select
+                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            :value="getRecordStatus(student.id)"
+                                            :disabled="activeSheet.locked"
+                                            @change="updateRecordStatus(student.id, $event.target.value)"
+                                            :class="{
+                                                'bg-green-50 text-green-700 border-green-200': getRecordStatus(student.id) === 'hadir',
+                                                'bg-blue-50 text-blue-700 border-blue-200': getRecordStatus(student.id) === 'izin',
+                                                'bg-yellow-50 text-yellow-700 border-yellow-200': getRecordStatus(student.id) === 'sakit',
+                                                'bg-red-50 text-red-700 border-red-200': getRecordStatus(student.id) === 'alfa',
+                                                'text-gray-500': !getRecordStatus(student.id)
+                                            }"
+                                        >
+                                            <option value="" disabled>Pilih Status</option>
+                                            <option value="hadir">Hadir</option>
+                                            <option value="izin">Izin</option>
+                                            <option value="sakit">Sakit</option>
+                                            <option value="alfa">Alfa</option>
+                                        </select>
+                                    </td>
                                         <td class="px-4 py-3">
                                             <input type="text"
                                                    placeholder="Catatan"
@@ -202,10 +198,15 @@
                                             <span x-text="sheet.locked ? 'Terkunci' : 'Draft'"></span>
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-sm">
+                                    <td class="px-6 py-4 text-sm flex gap-2">
                                         <button @click="selectSheet(sheet)" class="text-indigo-600 hover:text-indigo-900 font-medium">
-                                            <template x-if="activeSheet.id === sheet.id">Aktif</template>
-                                            <template x-if="activeSheet.id !== sheet.id">Pilih</template>
+                                            <span x-show="activeSheet.id === sheet.id">Aktif</span>
+                                            <span x-show="activeSheet.id !== sheet.id">Pilih</span>
+                                        </button>
+                                        <button @click="deleteSheet(sheet.id)" class="text-red-500 hover:text-red-700 ml-2" :disabled="sheet.locked" title="Hapus Sheet">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
                                         </button>
                                     </td>
                                 </tr>
@@ -220,6 +221,7 @@
     <script>
         function attendancePage(initial) {
             return {
+                apiBaseUrl: initial.apiBaseUrl || '/admin',
                 classes: initial.classes || [],
                 subjects: initial.subjects || [],
                 teachers: initial.teachers || [],
@@ -260,7 +262,7 @@
                     this.error = null;
 
                     try {
-                        const response = await fetch('/admin/attendance/sheets', {
+                        const response = await fetch(`${this.apiBaseUrl}/attendance/sheets`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -303,7 +305,7 @@
 
                     this.loading = true;
                     try {
-                        const response = await fetch(`/admin/attendance/sheets/${sheet.id}`, {
+                        const response = await fetch(`${this.apiBaseUrl}/attendance/sheets/${sheet.id}`, {
                             headers: {
                                 'Accept': 'application/json',
                             },
@@ -340,7 +342,7 @@
 
                 async loadStudents(classId) {
                     try {
-                        const response = await fetch(`/admin/students?class_id=${classId}`, {
+                        const response = await fetch(`${this.apiBaseUrl}/students?class_id=${classId}`, {
                             headers: { 'Accept': 'application/json' },
                         });
                         if (response.ok) {
@@ -357,14 +359,14 @@
                     this.saveError = null;
                     this.saveSuccess = null;
 
-                    const recordsArray = Object.entries(this.records).map(([student_id, data]) => ({
-                        student_id: parseInt(student_id),
-                        status: data.status || 'hadir',
-                        note: data.note || null,
+                    const recordsArray = this.students.map(student => ({
+                        student_id: student.id,
+                        status: this.getRecordStatus(student.id),
+                        note: this.getRecordNote(student.id)
                     }));
 
                     try {
-                        const response = await fetch(`/admin/attendance/sheets/${this.activeSheet.id}/records`, {
+                        const response = await fetch(`${this.apiBaseUrl}/attendance/sheets/${this.activeSheet.id}/records`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -404,7 +406,7 @@
 
                     this.loading = true;
                     try {
-                        const response = await fetch(`/admin/attendance/sheets/${this.activeSheet.id}/lock`, {
+                        const response = await fetch(`${this.apiBaseUrl}/attendance/sheets/${this.activeSheet.id}/lock`, {
                             method: 'POST',
                             headers: {
                                 'Accept': 'application/json',
@@ -429,9 +431,43 @@
                     }
                 },
 
+                async deleteSheet(sheetId) {
+                    if (!confirm('Apakah Anda yakin ingin menghapus sheet ini? Data yang dihapus tidak dapat dikembalikan.')) return;
+
+                    this.loading = true;
+                    try {
+                        const response = await fetch(`${this.apiBaseUrl}/attendance/sheets/${sheetId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            },
+                        });
+
+                        if (!response.ok) {
+                            const data = await response.json();
+                            throw new Error(data.message || 'Gagal menghapus sheet');
+                        }
+
+                        // Remove from list
+                        this.sheets = this.sheets.filter(s => s.id !== sheetId);
+
+                        // If active sheet was deleted, clear active sheet
+                        if (this.activeSheet && this.activeSheet.id === sheetId) {
+                            this.activeSheet = {};
+                            this.students = [];
+                            this.records = {};
+                        }
+                    } catch (e) {
+                        alert(e.message);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
                 async loadSheets() {
                     try {
-                        const response = await fetch('/admin/attendance/sheets', {
+                        const response = await fetch(`${this.apiBaseUrl}/attendance/sheets`, {
                             headers: { 'Accept': 'application/json' },
                         });
                         if (response.ok) {

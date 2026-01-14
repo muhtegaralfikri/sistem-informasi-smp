@@ -76,6 +76,7 @@ Route::middleware(['auth', 'verified', 'role:Admin TU'])->prefix('admin')->name(
     Route::get('attendance/sheets/{sheet}', [AttendanceController::class, 'sheetsShow']);
     Route::post('attendance/sheets/{sheet}/records', [AttendanceController::class, 'recordsUpsert']);
     Route::post('attendance/sheets/{sheet}/lock', [AttendanceController::class, 'sheetsLock']);
+    Route::delete('attendance/sheets/{sheet}', [AttendanceController::class, 'sheetsDestroy']);
 
     // Penilaian
     Route::get('assessments', [AssessmentController::class, 'index']);
@@ -106,6 +107,17 @@ Route::middleware(['auth', 'verified', 'role:Guru'])->prefix('guru')->name('guru
     Route::get('/dashboard', [\App\Http\Controllers\Guru\GuruController::class, 'dashboard'])->name('dashboard');
     Route::get('/assessments', [AdminViewController::class, 'assessments'])->name('assessments.ui');
     Route::get('/attendance', [AdminViewController::class, 'attendance'])->name('attendance.ui');
+
+    // Attendance API for Guru
+    Route::get('attendance/sheets', [AttendanceController::class, 'sheetsIndex']);
+    Route::post('attendance/sheets', [AttendanceController::class, 'sheetsStore']);
+    Route::get('attendance/sheets/{sheet}', [AttendanceController::class, 'sheetsShow']);
+    Route::post('attendance/sheets/{sheet}/records', [AttendanceController::class, 'recordsUpsert']);
+    Route::post('attendance/sheets/{sheet}/lock', [AttendanceController::class, 'sheetsLock']);
+    Route::delete('attendance/sheets/{sheet}', [AttendanceController::class, 'sheetsDestroy']);
+
+    // Students API for loading students in attendance
+    Route::get('students', [StudentController::class, 'index']);
 });
 
 // Wali Kelas: rekap absensi kelasnya, approval raport
