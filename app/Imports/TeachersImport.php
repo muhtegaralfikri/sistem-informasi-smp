@@ -3,9 +3,11 @@
 namespace App\Imports;
 
 use App\Models\Teacher;
+use App\Models\User;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 
 class TeachersImport implements ToCollection, WithHeadingRow
 {
@@ -19,52 +21,49 @@ class TeachersImport implements ToCollection, WithHeadingRow
                 // Update existing teacher
                 $existing->update([
                     'full_name' => $row['nama'] ?? $row['full_name'] ?? $row['nama_lengkap'] ?? null,
-                    'gender' => $this->parseGender($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? null),
-                    'birth_date' => $this->parseDate($row['tanggal_lahir'] ?? $row['birth_date'] ?? $row['tgl_lahir'] ?? null),
                     'phone' => $row['no_hp'] ?? $row['phone'] ?? $row['telepon'] ?? null,
-                    'address' => $row['alamat'] ?? $row['address'] ?? null,
-                    'subject' => $row['mapel'] ?? $row['mata_pelajaran'] ?? $row['subject'] ?? null,
+                    'email' => $row['email'] ?? null,
+                    'status' => $this->parseStatus($row['status'] ?? null),
                 ]);
             } else {
-                // Create new teacher
+                // Create new teacher with user
+                $fullName = $row['nama'] ?? $row['full_name'] ?? $row['nama_lengkap'] ?? null;
+                $nip = $row['nip'];
+
+                // Create user account for teacher
+                $user = User::create([
+                    'name' => $fullName,
+                    'email' => $row['email'] ?? strtolower(str_replace(' ', '.', $fullName)) . '@sis.dev',
+                    'password' => Hash::make('password123'), // Default password
+                ]);
+
+                // Assign teacher role
+                $user->roles()->attach(\App\Models\Role::where('name', 'Guru')->first()->id);
+
+                // Create teacher record
                 Teacher::create([
-                    'nip' => $row['nip'],
-                    'full_name' => $row['nama'] ?? $row['full_name'] ?? $row['nama_lengkap'] ?? null,
-                    'gender' => $this->parseGender($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? null),
-                    'birth_date' => $this->parseDate($row['tanggal_lahir'] ?? $row['birth_date'] ?? $row['tgl_lahir'] ?? null),
+                    'user_id' => $user->id,
+                    'nip' => $nip,
+                    'full_name' => $fullName,
                     'phone' => $row['no_hp'] ?? $row['phone'] ?? $row['telepon'] ?? null,
-                    'address' => $row['alamat'] ?? $row['address'] ?? null,
-                    'subject' => $row['mapel'] ?? $row['mata_pelajaran'] ?? $row['subject'] ?? null,
+                    'email' => $row['email'] ?? null,
+                    'status' => $this->parseStatus($row['status'] ?? null),
                 ]);
             }
         }
     }
 
-    private function parseGender($value)
+    private function parseStatus($value)
     {
-        if (!$value) return 'male';
+        if (!$value) return 'active';
 
         $value = strtolower(trim($value));
-        if (in_array($value, ['l', 'laki-laki', 'lelaki', 'male', 'pria'])) {
-            return 'male';
+        if (in_array($value, ['aktif', 'active', 'a', '1', 'yes', 'ya'])) {
+            return 'active';
         }
-        if (in_array($value, ['p', 'perempuan', 'female', 'wanita'])) {
-            return 'female';
+        if (in_array($value, ['nonaktif', 'non-aktif', 'inactive', 'i', '0', 'no', 'tidak'])) {
+            return 'inactive';
         }
-        return 'male';
-    }
-
-    private function parseDate($value)
-    {
-        if (!$value) return null;
-
-        try {
-            if (is_numeric($value)) {
-                return \Carbon\Carbon::createFromDate(1900, 1, 1)->addDays($value - 2)->format('Y-m-d');
-            }
-            return \Carbon\Carbon::parse($value)->format('Y-m-d');
-        } catch (\Exception $e) {
-            return null;
-        }
+        return 'active';
     }
 }
