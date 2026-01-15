@@ -30,15 +30,16 @@ class TeachersImport implements ToCollection, WithHeadingRow
                 $fullName = $row['nama'] ?? $row['full_name'] ?? $row['nama_lengkap'] ?? null;
                 $nip = $row['nip'];
 
+                // Get teacher role
+                $teacherRole = \App\Models\Role::where('name', 'Guru')->first();
+
                 // Create user account for teacher
                 $user = User::create([
                     'name' => $fullName,
                     'email' => $row['email'] ?? strtolower(str_replace(' ', '.', $fullName)) . '@sis.dev',
                     'password' => Hash::make('password123'), // Default password
+                    'role_id' => $teacherRole ? $teacherRole->id : null,
                 ]);
-
-                // Assign teacher role
-                $user->roles()->attach(\App\Models\Role::where('name', 'Guru')->first()->id);
 
                 // Create teacher record
                 Teacher::create([
